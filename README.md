@@ -138,8 +138,10 @@ CALL_AMR  (one identical path for isolates, decoy and titration points)
    ├─ AMRFINDERPLUS ────── organism-aware for isolates, permissive for controls
    └─ VALIDATION_GATE ──── PASS/FAIL + amr_result_interpretable
    │
-   └─→ SHUFFLE_ASSEMBLY ──→ AMRFINDERPLUS   caller-level control
-                                            (same process, same parameters)
+   └─→ SHUFFLE_ASSEMBLY ──→ AMRFINDERPLUS ──→ CONTROL_GATE
+                            caller-level control: same process, same
+                            parameters; gated separately because it has
+                            no reads, so no assembly check applies to it
    ↓
 AGGREGATE_RESULTS ──── tables + run summary
 ```
@@ -169,6 +171,17 @@ controls. Full run: 4 assemblies + 2 controls on a 12-core laptop, no GPU.
 
 Depth is measured by remapping reads onto their own assembly, not estimated from input
 yield. Breadth is the fraction of assembly covered at >=1x.
+
+Every verdict in that column is a gate's output, reproducible from
+`results/validation/`, not an authorial judgement. The two controls are gated
+differently, because they are asking different questions. `NEG_DECOY` goes through
+`VALIDATION_GATE` with the rest: it has reads, so assembly quality applies to it, and the
+gate inverts its expectation — it must return zero elements. `CALLER_CONTROL` has no reads
+at all (it is a real assembly with its bases shuffled), so depth, N50 and breadth do not
+exist for it and it goes through `CONTROL_GATE` instead, which carries one binding check:
+zero elements of any class. Its assembly-quality fields are published as `NA` rather than
+`0`, since `0` would read as a measurement. `n/a` in the depth column above means the same
+thing.
 
 **"AMR genes" means resistance determinants only.** AMRFinderPlus returns three classes
 of element in one table — `AMR` (acquired and mutational resistance determinants),
@@ -232,14 +245,17 @@ passed the assembly-quality checks would be the alarming outcome.
 
 ```bash
 python3 tests/test_validation_gate.py results/
+python3 tests/test_control_gate.py results/
 python3 tests/test_figures.py results/
+python3 tests/test_samplesheet.py          # needs nextflow on PATH
+python3 tests/test_module_paths.py
 ```
 
-Both suites are **mutation tests**: each one breaks something in a specific, plausible way
-and asserts that the code refuses to produce output. This is deliberate. Both the gate and
-the figure script carry self-checks, and a self-check that cannot fail is worse than no
-check at all — it reads as evidence while proving nothing. Two of the checks in this
-repository were exactly that until these tests were written:
+The suites are **mutation tests**: each one breaks something in a specific, plausible way
+and asserts that the code refuses to produce output. This is deliberate. The gates and the
+figure script carry self-checks, and a self-check that cannot fail is worse than no check
+at all — it reads as evidence while proving nothing. Three of the checks in this repository
+were exactly that until these tests were written:
 
 - The gate's `positive_expectation_met` counted every element AMRFinderPlus returned, so
   an isolate with zero resistance determinants and twenty metal-tolerance genes satisfied
@@ -247,15 +263,36 @@ repository were exactly that until these tests were written:
 - The figure script's leader-line check asserted that each label's leader ended on *a*
   marker rather than on *its own* marker. Every possible mis-pairing of labels to points
   passes that check, including one that labels every isolate with its neighbour's name.
+- The caller-level control — the sharpest control here — had no check at all. Its calls
+  went straight to the aggregator, and "the control came back empty" was a sentence in
+  this README rather than an assertion in the code. Had the shuffle silently stopped
+  shuffling, every isolate's determinants would have been reproduced on the control and
+  the run would still have reported success.
 
-`test_validation_gate.py` extracts the Nextflow-interpolated Python from
-`modules/validation_gate.nf` and substitutes the interpolations, so it exercises the
-source the pipeline actually runs rather than a copy that can drift from it. It uses the
-published call table for the real-data cases and synthetic tables for the cases a healthy
-run does not contain (an isolate with stress hits but no resistance genes; a contaminated
-negative control). `test_figures.py` re-renders the real figure and then mutates the
-plotting source three ways: mislabelled leaders, a dropped label, and an unknown
-samplesheet role.
+`test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
+Python from their modules and substitute the interpolations, so they exercise the source
+the pipeline actually runs rather than a copy that can drift from it. They use the
+published call tables for the real-data cases and synthetic tables for the cases a healthy
+run does not contain: an isolate with stress hits but no resistance genes, a contaminated
+negative control, and a caller control contaminated with each element class in turn.
+
+`test_control_gate.py` also covers what the control's verdict does downstream. Because the
+control has no reads, its depth and N50 are **null rather than zero** — zero would read as
+a measured value — and the aggregator must render that without crashing. The test runs the
+real aggregator over a null-depth verdict, then re-runs it with the guard removed to
+confirm the check is not vacuous; the unguarded version raises `TypeError` on `None`.
+That failure would land in the last process of the run, after every assembly and every AMR
+call had already been computed.
+
+`test_samplesheet.py` drives the real workflow with malformed samplesheets, because the
+validation lives in Groovy inside the workflow and the thing worth testing is whether the
+run actually refuses. It covers an empty `sample_id` (which previously produced publish
+files named `.verdict.json` and `.amrfinder.tsv` — dotfiles, invisible to `ls`, while the
+run still reported `completed : OK`), a mistyped role such as `negatve_control` (which
+would route the decoy to the positive-expectation branch, scoring the one sample that must
+come back empty as though it had to come back full), a duplicate id, and an id that is not
+filename-safe. `test_figures.py` re-renders the real figure and then mutates the plotting
+source three ways: mislabelled leaders, a dropped label, and an unknown samplesheet role.
 
 ## Scope and limits
 

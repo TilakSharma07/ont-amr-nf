@@ -21,6 +21,11 @@ process AGGREGATE_RESULTS {
     #!/usr/bin/env python3
     import csv, glob, json, os
 
+    def num(x):
+        # The caller-level control has no reads, so depth/N50/length are null rather
+        # than zero -- zero would read as a measured value. Render them as NA.
+        return "NA" if x is None else x
+
     # ---- AMR calls: one tidy long table, every sample, one row per determinant ----
     amr_rows = []
     for fn in sorted(glob.glob("amr/*.tsv")):
@@ -80,17 +85,24 @@ process AGGREGATE_RESULTS {
             fh.write(f"{v['sample_id']}\\t{v['role']}\\t{v['verdict']}\\t"
                      f"{v.get('flye_status','NA')}\\t{v['amr_calls']}\\t"
                      f"{v.get('total_elements','NA')}\\t"
-                     f"{v['mean_depth']}\\t{v['n50']}\\t{v['total_len']}\\t{v['n_contigs']}\\t"
+                     f"{num(v['mean_depth'])}\\t{num(v['n50'])}\\t"
+                     f"{num(v['total_len'])}\\t{num(v['n_contigs'])}\\t"
                      f"{v['amr_result_interpretable']}\\t{failed}\\n")
 
     # ---- depth titration: determinants recovered as a function of depth ----
     # Only written when titration points are present. Reports the RECOVERY FRACTION
     # against the full-depth call set of the same parent sample, which is what makes
     # the curve interpretable: "how much of the truth do I still see at this depth".
+    # Built here rather than lower down: the titration block below reads it, and it
+    # was previously defined after its first use (a NameError that only fired with
+    # --run_titration true, which no completed run had used).
+    genes_per_sample = {}
+    for r in amr_rows:
+        genes_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
+
     tit = [v for v in vrows if v["role"] == "titration"]
+    full_sets = {}
     if tit:
-        genes_at = {s: set() for s in genes_per_sample}
-        full_sets = {}
         for v in vrows:
             if v["role"] != "titration":
                 full_sets[v["sample_id"]] = genes_per_sample.get(v["sample_id"], set())
@@ -116,9 +128,6 @@ process AGGREGATE_RESULTS {
     # ---- human-readable run summary ----
     n_pass = sum(1 for v in vrows if v["verdict"] == "PASS")
     neg = [v for v in vrows if v["role"] == "negative_control"]
-    genes_per_sample = {}
-    for r in amr_rows:
-        genes_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
 
     L = ["# Run summary\\n",
          f"- samples evaluated: **{len(vrows)}**",
@@ -129,8 +138,10 @@ process AGGREGATE_RESULTS {
          "|---|---|---|---|---|---|"]
     for v in sorted(vrows, key=lambda x: (x["role"], x["sample_id"])):
         g = len(genes_per_sample.get(v["sample_id"], []))
+        d  = f"{v['mean_depth']:.1f}x" if v.get("mean_depth") is not None else "n/a"
+        n5 = f"{v['n50']:,}"            if v.get("n50")        is not None else "n/a"
         L.append(f"| `{v['sample_id']}` | {v['role']} | **{v['verdict']}** | "
-                 f"{v['mean_depth']:.1f}x | {v['n50']:,} | {g} |")
+                 f"{d} | {n5} | {g} |")
     if tit:
         L.append("\\n## Depth titration\\n")
         L.append("Recovery fraction is measured against the full-depth call set of the "
@@ -159,8 +170,10 @@ process AGGREGATE_RESULTS {
     else:
         L.append("No read-level decoy was run (`--make_decoy false`).")
 
-    # The caller-level control has no verdict file (it bypasses the assembly gate by
-    # design), so it is assessed directly from its call set.
+    # The caller-level control is gated by CONTROL_GATE (it bypasses the assembly gate
+    # by design -- no reads, so no depth or N50 -- but its emptiness is a binding check
+    # there, and its verdict appears in vrows above). The narrative below reads its call
+    # set directly so the prose can name the genes if any survived.
     cc_genes = genes_per_sample.get("CALLER_CONTROL")
     if cc_genes is None:
         L.append("\\nNo caller-level control was run (`--caller_control false`).")

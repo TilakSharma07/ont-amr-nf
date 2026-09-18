@@ -34,3 +34,8 @@ __pycache__/
 *.pyc
 .idea/
 .vscode/
+
+# Scratch samplesheets from manual testing; tests/test_samplesheet.py
+# generates its own in a temp dir.
+.bad_sheet.csv
+.sheet_*.csv

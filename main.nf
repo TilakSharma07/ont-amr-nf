@@ -19,6 +19,7 @@ include { AMRFINDERPLUS    } from './modules/amrfinderplus'
 include { VALIDATION_GATE  } from './modules/validation_gate'
 include { SUBSAMPLE_DEPTH  } from './modules/subsample_depth'
 include { SHUFFLE_ASSEMBLY } from './modules/shuffle_assembly'
+include { CONTROL_GATE }     from './modules/control_gate.nf'
 include { AGGREGATE_RESULTS } from './modules/aggregate'
 
 // The caller-level control runs through the SAME process as every real isolate, only
@@ -133,16 +134,54 @@ workflow {
     """.stripIndent()
 
     // ---- samplesheet -> (meta, accession) ----
+    //
+    // Validated row by row, because an unvalidated samplesheet fails silently rather
+    // than loudly. A row with an empty sample_id used to produce publish files named
+    // ".verdict.json" and ".amrfinder.tsv" — dotfiles, invisible in a normal listing —
+    // and the run still reported "completed : OK". A typo'd role was worse in a subtler
+    // way: 'negatve_control' does not match the control branch in the validation gate,
+    // so a decoy would have been held to a positive expectation instead of an
+    // emptiness check. Both are the kind of defect that only shows up as a wrong
+    // result, so they are refused at parse time.
+    def sheet_roles = ['test', 'clonal_replicate', 'cross_species',
+                       'negative_control', 'caller_control', 'titration'] as Set
+    def seen_ids = [] as Set
+
     ch_input = Channel
         .fromPath(params.samplesheet, checkIfExists: true)
         .splitCsv(header: true)
-        .filter { row -> row.accession && row.accession != 'synthetic' }
         .map { row ->
+            def n = row.sample_id?.trim()
+            if (!n) {
+                error("Samplesheet ${params.samplesheet}: a row has no sample_id " +
+                      "(accession='${row.accession ?: ''}', species='${row.species ?: ''}'). " +
+                      "Every row needs one: it names every output file for that sample.")
+            }
+            if (!(n ==~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/)) {
+                error("Samplesheet ${params.samplesheet}: sample_id '${n}' is not usable as " +
+                      "a filename. Use letters, digits, dot, underscore or hyphen, starting " +
+                      "with a letter or digit.")
+            }
+            if (!seen_ids.add(n)) {
+                error("Samplesheet ${params.samplesheet}: sample_id '${n}' appears more than " +
+                      "once. Duplicate ids would overwrite each other's results.")
+            }
+            def r = row.role?.trim() ?: 'test'
+            if (!(r in sheet_roles)) {
+                error("Samplesheet ${params.samplesheet}: sample '${n}' has role '${r}', which " +
+                      "is not recognised. Valid roles: ${sheet_roles.sort().join(', ')}. " +
+                      "An unrecognised role is treated as a test sample and would be held to " +
+                      "a positive expectation — a mistyped control would be scored backwards.")
+            }
+            [row, n, r]
+        }
+        .filter { row, n, r -> row.accession && row.accession != 'synthetic' }
+        .map { row, n, r ->
             def meta = [
-                id       : row.sample_id,
+                id       : n,
                 accession: row.accession,
                 species  : row.species,
-                role     : row.role ?: 'test'
+                role     : r
             ]
             tuple(meta, row.accession)
         }
@@ -244,8 +283,15 @@ workflow {
 
         AMRFINDERPLUS_CONTROL(ch_cc)
         ch_cc_calls = AMRFINDERPLUS_CONTROL.out.calls
+
+        // The control gets its own gate: it has no reads, so no assembly-quality
+        // check applies to it, but its emptiness must be machine-checked rather
+        // than asserted in prose. Its verdict joins the same summary table.
+        CONTROL_GATE(ch_cc_calls)
+        ch_cc_json = CONTROL_GATE.out.json
     } else {
         ch_cc_calls = Channel.empty()
+        ch_cc_json  = Channel.empty()
     }
 
     AGGREGATE_RESULTS(
@@ -253,7 +299,7 @@ workflow {
             .mix(ch_cc_calls.map { meta, f -> f })
             .collect(),
         CALL_AMR.out.stats.map  { meta, f -> f }.collect(),
-        CALL_AMR.out.json.collect()
+        CALL_AMR.out.json.mix(ch_cc_json).collect()
     )
 
     CALL_AMR.out.versions
