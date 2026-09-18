@@ -434,12 +434,26 @@ def figure_titration():
     ax1.plot(depths, med, "-", color=C_TIT, lw=1.3, zorder=3)
     ax1.plot(depths, med, "s", color=C_TIT, ms=5, mec="white", mew=0.6, zorder=4)
     ax1.axhline(1.0, color=C_GREY, lw=0.7, ls="--", zorder=1)
-    ax1.annotate("complete recovery", (depths[0], 1.0), xytext=(2, -11),
+    # Offset the reference-line label away from the data, whichever side that is.
+    dy = -11 if min(med) > 0.9 else 4
+    ax1.annotate("complete recovery", (depths[0], 1.0), xytext=(2, dy),
                  textcoords="offset points", fontsize=SMALL, color=C_GREY)
     ax1.set_ylim(-0.04, 1.12)
     ax1.set_ylabel("determinants recovered\n(fraction of full-depth set)")
     ax1.set_xlabel("target depth (x)")
-    ax1.set_title("Recovery of the full-depth determinant set\nfalls off below the depth floor")
+    # Title states what the data shows, decided from the data. A pre-written
+    # conclusion would have survived a result that contradicted it.
+    lowest, highest = med[0], med[-1]
+    if lowest >= 0.999:
+        t1 = ("Every determinant is recovered at all depths tested\n"
+              f"(down to {depths[0]}x)")
+    elif lowest >= 0.95:
+        t1 = (f"Recovery stays above {lowest:.0%} down to {depths[0]}x,\n"
+              "so the depth floor is conservative here")
+    else:
+        t1 = (f"Recovery falls to {lowest:.0%} at {depths[0]}x\n"
+              f"from {highest:.0%} at {depths[-1]}x")
+    ax1.set_title(t1)
     ax1.margins(x=0.10)
     panel_letter(ax1, "a")
 
@@ -452,7 +466,18 @@ def figure_titration():
     ax2.plot(depths, n50s, "s", color=C_TIT, ms=5, mec="white", mew=0.6, zorder=4)
     ax2.set_ylabel("assembly N50 (Mb)")
     ax2.set_xlabel("target depth (x)")
-    ax2.set_title("Contiguity collapses at low depth,\nwhich is what drives the missed calls")
+    # Same rule, and the causal claim is only made when both quantities move.
+    n50_drop = (n50s[-1] - n50s[0]) / n50s[-1] if n50s[-1] else 0.0
+    if n50_drop >= 0.25 and med[0] < 0.999:
+        t2 = (f"N50 falls {n50_drop:.0%} from {depths[-1]}x to {depths[0]}x,\n"
+              "which is what drives the missed calls")
+    elif n50_drop >= 0.25:
+        t2 = (f"N50 falls {n50_drop:.0%} from {depths[-1]}x to {depths[0]}x\n"
+              "without costing any determinant calls")
+    else:
+        t2 = (f"Contiguity is stable across the range\n"
+              f"({n50s[0]:.1f}-{n50s[-1]:.1f} Mb N50)")
+    ax2.set_title(t2)
     ax2.margins(0.10)
     ax2.text(1.0, -0.22, "higher = better", transform=ax2.transAxes,
              ha="right", va="top", fontsize=SMALL, color=C_GREY)

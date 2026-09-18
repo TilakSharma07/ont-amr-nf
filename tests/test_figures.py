@@ -55,17 +55,129 @@ def expect_failure(name, mutate, results, figdir):
     return False
 
 
+def titration_titles_match_data(results, figdir):
+    """Render fig3 against synthetic titration tables and check the titles.
+
+    The figure is given three shapes of data in turn — recovery complete at every
+    depth, recovery collapsing at low depth, and recovery high but not perfect —
+    and each rendered title must describe the data it was given. A title that says
+    "falls off below the depth floor" over a flat curve is worse than no title.
+    """
+    import csv as _csv
+    import shutil as _shutil
+
+    scenarios = {
+        # (name, rows) -> substrings the title must and must not contain
+        "complete recovery": (
+            [(5, 1.0, 5_400_000), (10, 1.0, 5_410_000),
+             (20, 1.0, 5_420_000), (40, 1.0, 5_425_000)],
+            ["Every determinant is recovered"], ["falls"]),
+        "collapse at low depth": (
+            [(5, 0.35, 900_000), (10, 0.70, 2_100_000),
+             (20, 0.95, 4_800_000), (40, 1.0, 5_425_000)],
+            ["Recovery falls to 35%"], ["Every determinant"]),
+        "high but imperfect": (
+            [(5, 0.97, 5_100_000), (10, 0.99, 5_300_000),
+             (20, 1.0, 5_400_000), (40, 1.0, 5_425_000)],
+            ["97%"], ["Every determinant is recovered"]),
+    }
+
+    failures = []
+    for label, (rows_, must, must_not) in scenarios.items():
+        scratch = tempfile.mkdtemp(prefix="tit-")
+        with open(os.path.join(scratch, "depth_titration.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "parent_id", "target_depth", "replicate",
+                        "realised_depth", "n50", "n_genes", "n_genes_full_depth",
+                        "recovery_fraction", "genes_missed", "verdict"])
+            for depth, frac, n50 in rows_:
+                w.writerow([f"KP_X_d{depth}_r1", "KP_X", depth, 1, depth * 0.95,
+                            n50, int(20 * frac), 20, f"{frac:.4f}", "-", "PASS"])
+
+        g = load(results=scratch, figdir=scratch)
+
+        # figure_titration() closes its figure before returning, so the titles have
+        # to be captured at draw time rather than read off a surviving figure. Wrap
+        # savefig -- it is called while the figure is still open, and it is the point
+        # at which the titles are final.
+        captured = []
+        real_savefig = g["plt"].Figure.savefig
+
+        def spy(self, *a, **kw):
+            # get_title() reads the *centre* slot, but make_figures.py sets
+            # rcParams["axes.titlelocation"] = "left", so set_title() writes the left
+            # slot and get_title() returns "". Read all three slots; a check that
+            # looked only at the default would report every title as missing.
+            for ax in self.get_axes():
+                for loc in ("left", "center", "right"):
+                    txt = ax.get_title(loc=loc)
+                    if txt:
+                        captured.append(txt)
+            return real_savefig(self, *a, **kw)
+
+        g["plt"].Figure.savefig = spy
+        try:
+            g["figure_titration"]()
+        finally:
+            g["plt"].Figure.savefig = real_savefig
+
+        assert captured, f"{label}: figure_titration produced no titled axes"
+        joined = " | ".join(captured)
+
+        for s in must:
+            if s not in joined:
+                failures.append(f"{label}: expected {s!r} in titles, got {joined!r}")
+        for s in must_not:
+            if s in joined:
+                failures.append(f"{label}: title wrongly claims {s!r}: {joined!r}")
+        _shutil.rmtree(scratch, ignore_errors=True)
+
+    if failures:
+        print("  FAIL  titration titles describe the data they were given")
+        for f in failures[:3]:
+            print(f"        {f[:150]}")
+        return False
+    print("  PASS  titration titles describe the data they were given"
+          f"\n        {len(scenarios)} data shapes, each title checked against its numbers")
+    return True
+
+
 def main(results):
     figdir = tempfile.mkdtemp(prefix="figtest-")
     print(f"results={results}\nscratch={figdir}\n")
 
-    ok = []
+    # 0. Refuse to run against a results directory that has no tables in it.
+    #
+    #    This guard exists because the suite passed without it. make_figures.py
+    #    returns early when validation_summary.tsv is absent (load_tsv returns []
+    #    for a missing file), so pointing the suite at a wrong path made the
+    #    baseline "render clean" and every mutation "render without complaint" --
+    #    four green checks over a figure that was never drawn. A test suite that
+    #    reports success when handed the wrong directory is worse than no suite,
+    #    because it is trusted.
+    required = ["validation_summary.tsv", "amr_calls.tsv", "assembly_metrics.tsv"]
+    missing = [f for f in required if not os.path.exists(os.path.join(results, f))]
+    if missing:
+        print(f"  FAIL  results directory is not usable: missing {', '.join(missing)}")
+        print(f"        looked in {results}")
+        print("        (the figures would be skipped, and every check below would "
+              "pass vacuously)")
+        return 1
+    print(f"  PASS  results directory has all {len(required)} required tables")
+
+    ok = [True]
 
     # 1. Baseline: the real figure must render clean, or the mutation tests below
     #    prove nothing — a script that always raised would "pass" every one of them.
     g = load(results=results, figdir=figdir)
     g["figure_controls"]()
-    print("  PASS  baseline figure renders with all self-checks clean")
+    fig1 = os.path.join(figdir, "fig1_controls_and_quality.png")
+    # Not just "did not raise" -- a skipped figure also does not raise.
+    assert os.path.exists(fig1) and os.path.getsize(fig1) > 20_000, (
+        f"baseline produced no usable figure: exists={os.path.exists(fig1)}, "
+        f"size={os.path.getsize(fig1) if os.path.exists(fig1) else 0}")
+    print("  PASS  baseline figure renders with all self-checks clean"
+          f"\n        wrote {os.path.getsize(fig1) // 1024} KB")
     ok.append(True)
 
     # 2. Mislabelled leader lines: label text from one sample, leader endpoint from
@@ -92,6 +204,12 @@ def main(results):
         ('    "test":             (C_TEST,   "clinical isolate",     False),',
          "    # 'test' role deliberately removed by the test suite"),
         results, figdir))
+
+    # 5. The titration figure's titles must agree with the titration data.
+    #    They were originally hard-coded ("Recovery ... falls off below the depth
+    #    floor"), which would have survived a run showing complete recovery at every
+    #    depth. A title is a claim; this checks the claim against the numbers.
+    ok.append(titration_titles_match_data(results, figdir))
 
     print()
     if all(ok):
