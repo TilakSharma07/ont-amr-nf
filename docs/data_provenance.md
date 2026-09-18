@@ -37,9 +37,13 @@ R10.4.1 was **confirmed from submission metadata**, not inferred from the search
 
 Every source study describes its isolates as carbapenemase-producing, carbapenem-resistant, or ESBL-producing. That is an independent, *a priori* expectation from the study design — so a pipeline run that fails to recover beta-lactamase determinants in these genomes is wrong, regardless of whether it completes without error. This is what makes them usable as positive controls.
 
-## Negative control
+## Negative controls
 
-`NEG_DECOY` is generated inside the pipeline by shuffling real read sequences while preserving read length and base composition. It contains no true biological ORFs, so any AMR call against it is a false positive. It is the cheapest available guard against a caller that reports hits from composition alone.
+There are two, because they test different things.
+
+`NEG_DECOY` (read-level) is generated inside the pipeline by shuffling real read sequences while preserving read length and base composition. It contains no true biological ORFs, so any AMR call against it is a false positive. It flows through the identical filter → assemble → call → gate path as the real isolates.
+
+`CALLER_CONTROL` (caller-level) exists because the read-level decoy does not assemble — which is the correct outcome for shuffled reads, but it means the gene caller receives an empty FASTA and returns an empty call set trivially. That tests the assembler, not the caller. So a real, good assembly has its bases shuffled *within each contig*: contig count, contig lengths and GC content are preserved exactly, gene content is destroyed. It then goes through the same AMRFinderPlus process with the same parameters. A call there is driven by composition rather than gene identity. The measured composition of source vs. shuffled sequence is published to `results/controls/caller_control_composition.tsv` so the claim is checkable rather than asserted.
 
 ## Reproducing the retrieval
 
@@ -47,4 +51,6 @@ Every source study describes its isolates as carbapenemase-producing, carbapenem
 nextflow run . -profile conda --samplesheet assets/samplesheet.csv
 ```
 
-Accessions are pinned in `assets/samplesheet.csv`; the pipeline fetches FASTQ from the NCBI Traces endpoint and records md5 checksums in `results/checksums.tsv` so a later run can be shown to have used byte-identical input.
+Accessions are pinned in `assets/samplesheet.csv`; the pipeline fetches FASTQ from the NCBI Traces endpoint and records an md5 per run in `results/reads/<sample_id>.md5`, so a later run can be shown to have used byte-identical input.
+
+The `Est. depth` column above is an *estimate from input bases over expected genome size* — it is the figure used to choose the isolates, not a result. The pipeline never uses it: realised depth is measured by remapping reads onto their own assembly and is reported in `results/assembly_metrics.tsv`.

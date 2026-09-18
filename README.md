@@ -153,6 +153,110 @@ basecaller fields rather than from a keyword match. Accessions, BioProjects, ori
 studies and expected phenotypes are in
 [`docs/data_provenance.md`](docs/data_provenance.md).
 
+## Results on real data
+
+Four public clinical isolates from three independent surveillance studies, plus both
+controls. Full run: 4 assemblies + 2 controls on a 12-core laptop, no GPU.
+
+| Sample | Role | Contigs | N50 | Total | GC | Depth | Breadth | AMR genes | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| `KP_ES_7636` | test | 11 | 5,425,447 | 5,887,566 | 56.96% | 29.9x | 100% | 20 | PASS |
+| `KP_ES_7983` | clonal replicate | 3 | 5,310,109 | 5,617,970 | 57.19% | 26.1x | 100% | 20 | PASS |
+| `KP_BG_81` | independent lineage | 4 | 5,437,787 | 5,706,551 | 56.98% | 36.5x | 100% | 24 | PASS |
+| `EC_PE_M09449` | cross-species | 7 | 4,740,491 | 5,115,139 | 50.65% | 31.2x | 100% | 29 | PASS |
+| `NEG_DECOY` | read control | 0 | 0 | 0 | NA | 0x | 0% | **0** | PASS (expected failure) |
+| `CALLER_CONTROL` | caller control | 11 | as source | 5,887,566 | 56.96% | n/a | **0** | PASS |
+
+Depth is measured by remapping reads onto their own assembly, not estimated from input
+yield. Breadth is the fraction of assembly covered at >=1x.
+
+**"AMR genes" means resistance determinants only.** AMRFinderPlus returns three classes
+of element in one table — `AMR` (acquired and mutational resistance determinants),
+`STRESS` (biocide, metal and heat tolerance) and `VIRULENCE` — and counting all of them
+together roughly doubles the apparent number of resistance genes. `KP_ES_7636` returns 43
+elements, of which 20 are resistance determinants and 23 are stress-tolerance genes. Both
+numbers are published (`amr_calls` and `total_elements` in `validation_summary.tsv`), and
+the distinction is load-bearing for the gate: `positive_expectation_met` counts resistance
+determinants, so an isolate whose resistance calling silently failed cannot satisfy it on
+the strength of its metal-tolerance genes. The negative-control check runs the other way
+and requires zero elements of *any* class — a control must return nothing at all, not
+merely nothing under one label.
+
+### The three things this run actually demonstrates
+
+**1. Clonal concordance — 1.0000.** `KP_ES_7636` and `KP_ES_7983` are two isolates of the
+same ST5994 outbreak clone, sequenced separately and assembled independently here. They
+returned **identical** determinant sets: 20 genes each, 20 shared, zero discordant
+(Jaccard = 1.0000). Nothing in the pipeline enforces this — the two samples never meet.
+It is the closest thing available to a reproducibility measurement on real data.
+
+**2. Expected phenotypes recovered, including co-production.** Each source study describes
+its isolates independently of this pipeline, which makes those descriptions *a priori*
+expectations rather than post-hoc agreement:
+
+| Sample | Study describes | Recovered here |
+|---|---|---|
+| `KP_ES_7636` / `KP_ES_7983` | carbapenemase-producing K. pneumoniae ST5994 | `blaOXA-48`, `blaCTX-M-15`, `blaOXA-1` |
+| `KP_BG_81` | carbapenem-resistant Enterobacterales surveillance | `blaNDM-5`, `blaSFO-1`, `ompK36_D135DGD` |
+| `EC_PE_M09449` | carbapenemase **co-producing** E. coli | `blaOXA-48` **and** `blaNDM-1`, plus `blaCTX-M-15`, `blaOXA-1` |
+
+The Peru isolate is the sharpest of these: the study claims co-production of two
+carbapenemases, and both were recovered in the same genome. `KP_BG_81` carries a
+different carbapenemase family (`blaNDM-5`) from a different country, so the result is
+not an artefact of one lineage.
+
+**3. Both negative controls came back empty — and they test different things.** The
+read-level decoy did not assemble, which is correct for shuffled reads. The caller-level
+control did assemble (by construction: it *is* a real assembly with bases shuffled within
+each contig) and was re-called with identical parameters, returning zero determinants. Its
+published composition table shows contig count, contig lengths, total length and base
+fractions matching the source assembly to six decimal places — so the empty result cannot
+be explained by having handed the caller something trivially different.
+
+```
+metric        source      shuffled
+contigs       11          11
+total_bp      5,887,566   5,887,566
+gc_fraction   0.569597    0.569597
+```
+
+### Reading the negative control's PASS
+
+`NEG_DECOY` shows `PASS` with `failed_checks = assembly_produced;depth;n50;genome_size;breadth`.
+That is not a contradiction. For a sample whose role is `negative_control`, the verdict is
+defined by whether the control *behaved as a control should* — zero calls — and the quality
+checks are recorded as failed because they genuinely failed. A negative control that
+passed the assembly-quality checks would be the alarming outcome.
+
+## Tests
+
+```bash
+python3 tests/test_validation_gate.py results/
+python3 tests/test_figures.py results/
+```
+
+Both suites are **mutation tests**: each one breaks something in a specific, plausible way
+and asserts that the code refuses to produce output. This is deliberate. Both the gate and
+the figure script carry self-checks, and a self-check that cannot fail is worse than no
+check at all — it reads as evidence while proving nothing. Two of the checks in this
+repository were exactly that until these tests were written:
+
+- The gate's `positive_expectation_met` counted every element AMRFinderPlus returned, so
+  an isolate with zero resistance determinants and twenty metal-tolerance genes satisfied
+  a check whose stated purpose is to prove the resistance caller works.
+- The figure script's leader-line check asserted that each label's leader ended on *a*
+  marker rather than on *its own* marker. Every possible mis-pairing of labels to points
+  passes that check, including one that labels every isolate with its neighbour's name.
+
+`test_validation_gate.py` extracts the Nextflow-interpolated Python from
+`modules/validation_gate.nf` and substitutes the interpolations, so it exercises the
+source the pipeline actually runs rather than a copy that can drift from it. It uses the
+published call table for the real-data cases and synthetic tables for the cases a healthy
+run does not contain (an isolate with stress hits but no resistance genes; a contaminated
+negative control). `test_figures.py` re-renders the real figure and then mutates the
+plotting source three ways: mislabelled leaders, a dropped label, and an unknown
+samplesheet role.
+
 ## Scope and limits
 
 - **Basecalling is not performed here.** The public input is already basecalled with

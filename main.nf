@@ -25,6 +25,26 @@ include { AGGREGATE_RESULTS } from './modules/aggregate'
 // aliased so Nextflow can invoke it twice in one workflow. Same code, same parameters.
 include { AMRFINDERPLUS as AMRFINDERPLUS_CONTROL } from './modules/amrfinderplus'
 
+/*
+ * Strict boolean coercion for params that gate a CONTROL or an experiment.
+ *
+ * This is not defensive boilerplate, it is a correctness fix. A value given on the
+ * command line arrives as a String, and in Groovy a non-empty String is truthy — so
+ * `--make_decoy false` under a bare `if (params.make_decoy)` silently ENABLES the
+ * control the user just asked to turn off. The same bug with the opposite sign is
+ * worse: a typo in `--caller_control` would silently DISABLE a control, and the run
+ * would look clean because its control never ran. Anything unparseable stops the run
+ * rather than picking a default.
+ */
+def asBool(value, String name) {
+    if (value instanceof Boolean) return value
+    if (value == null)            return false
+    def s = value.toString().trim().toLowerCase()
+    if (s in ['true',  'yes', 'on',  '1']) return true
+    if (s in ['false', 'no',  'off', '0', '']) return false
+    error "Parameter --${name} must be a boolean (true/false); got '${value}'"
+}
+
 def helpMessage() {
     log.info """
     ont-amr-nf ${workflow.manifest.version}
@@ -92,7 +112,7 @@ workflow CALL_AMR {
 
 workflow {
 
-    if (params.help) {
+    if (asBool(params.help, 'help')) {
         helpMessage()
         return
     }
@@ -106,8 +126,9 @@ workflow {
      read filter   : >=${params.min_read_len} bp, >=Q${params.min_read_q}
      assembler     : flye ${params.flye_mode}
      depth floor   : ${params.min_depth_x}x (AMR absence below this is not reported)
-     negative ctrl : ${params.make_decoy}
-     titration     : ${params.run_titration}
+     read control  : ${asBool(params.make_decoy, 'make_decoy')}
+     caller control: ${asBool(params.caller_control, 'caller_control')}
+     titration     : ${asBool(params.run_titration, 'run_titration')}
     ================================================================
     """.stripIndent()
 
@@ -130,7 +151,13 @@ workflow {
     ch_reads = FETCH_READS.out.reads
 
     // ---- negative control, derived from a real sample ----
-    if (params.make_decoy) {
+    // Coerced explicitly: see asBool() — a bare truth test on a CLI string would
+    // enable a control the user asked to disable.
+    run_decoy    = asBool(params.make_decoy,     'make_decoy')
+    run_caller_c = asBool(params.caller_control, 'caller_control')
+    run_tit      = asBool(params.run_titration,  'run_titration')
+
+    if (run_decoy) {
         ch_decoy_source = params.decoy_from
             ? ch_reads.filter { meta, r -> meta.id == params.decoy_from }
             : ch_reads.first()
@@ -155,7 +182,7 @@ workflow {
     }
 
     // ---- depth titration ----
-    if (params.run_titration) {
+    if (run_tit) {
         ch_tit_source = params.titration_sample
             ? ch_reads.filter { meta, r -> meta.id == params.titration_sample }
             : ch_reads.first()
@@ -196,7 +223,7 @@ workflow {
     // preserving contig count, lengths and GC exactly — and sends the result through
     // the same AMRFinderPlus process with the same parameters. A call here is a call
     // driven by composition rather than gene identity.
-    if (params.caller_control) {
+    if (run_caller_c) {
         ch_cc_source = CALL_AMR.out.amr_input
             .filter { meta, asm -> meta.role == 'test' }
             .first()

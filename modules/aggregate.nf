@@ -72,12 +72,14 @@ process AGGREGATE_RESULTS {
         if v:
             vrows.append(v)
     with open("validation_summary.tsv","w",newline="") as fh:
-        fh.write("sample_id\\trole\\tverdict\\tflye_status\\tamr_calls\\tmean_depth\\tn50\\t"
+        fh.write("sample_id\\trole\\tverdict\\tflye_status\\tamr_calls\\ttotal_elements\\t"
+                 "mean_depth\\tn50\\t"
                  "total_len\\tn_contigs\\tinterpretable\\tfailed_checks\\n")
         for v in sorted(vrows, key=lambda x: x.get("sample_id","")):
             failed = ";".join(c["check"] for c in v.get("checks",[]) if c["status"]=="FAIL") or "-"
             fh.write(f"{v['sample_id']}\\t{v['role']}\\t{v['verdict']}\\t"
                      f"{v.get('flye_status','NA')}\\t{v['amr_calls']}\\t"
+                     f"{v.get('total_elements','NA')}\\t"
                      f"{v['mean_depth']}\\t{v['n50']}\\t{v['total_len']}\\t{v['n_contigs']}\\t"
                      f"{v['amr_result_interpretable']}\\t{failed}\\n")
 
@@ -149,9 +151,9 @@ process AGGREGATE_RESULTS {
     L.append("\\n## Control outcomes\\n")
     if neg:
         n = neg[0]
-        ok = "as required" if n["amr_calls"] == 0 else "UNEXPECTED — investigate"
+        ok = "as required" if n.get("total_elements", n["amr_calls"]) == 0 else "UNEXPECTED — investigate"
         L.append(f"**Read-level decoy** (tests the assembler) — `{n['sample_id']}` returned "
-                 f"**{n['amr_calls']}** AMR calls ({ok}); flye status "
+                 f"**{n.get('total_elements', n['amr_calls'])}** elements of any type ({ok}); flye status "
                  f"`{n.get('flye_status','NA')}`, which is the expected outcome for "
                  f"shuffled reads.")
     else:

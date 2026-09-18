@@ -53,6 +53,16 @@ process FLYE_ASSEMBLE {
     fi
 
     printf '"${task.process}"\\n    flye: %s\\n' "\$(flye --version 2>&1)" > versions.yml
+
+    # Flye's staged working directories (disjointig assembly, repeat graph, contigger,
+    # polishing) are several times the size of the assembly itself and are not inputs to
+    # anything downstream. Removing them keeps the run's peak disk usage proportional to
+    # the number of CONCURRENT assemblies rather than the total number of samples, which
+    # is what lets this run on a laptop. flye.log is kept: it is the provenance record.
+    if [ -d flye_out ]; then
+        cp flye_out/flye.log ${meta.id}.flye.log 2>/dev/null || true
+        rm -rf flye_out/[0-9][0-9]-* flye_out/assembly.fasta flye_out/*.gfa flye_out/*.gv
+    fi
     """
 
     stub:

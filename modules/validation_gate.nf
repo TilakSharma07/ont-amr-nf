@@ -36,7 +36,19 @@ process VALIDATION_GATE {
     total_len  = int(s["total_len"])
     n_contigs  = int(s["n_contigs"])
     breadth    = float(s["breadth_1x"])
-    n_amr      = len(rows)
+
+    # AMRFinderPlus reports three element classes in one table: AMR (resistance
+    # determinants), STRESS (biocide/metal/heat tolerance) and VIRULENCE. Counting all
+    # rows as "AMR calls" inflates the number by ~2x on these isolates and, worse,
+    # weakens this gate: an isolate with zero resistance genes but 23 metal-tolerance
+    # genes would satisfy a positive expectation it does not actually meet. Count the
+    # resistance determinants for the AMR claim, and every element for the control
+    # claim — a control must return nothing at all, not merely nothing labelled AMR.
+    etype = lambda r: (r.get("element_type") or r.get("Element type") or r.get("Type") or "").upper()
+    n_amr       = sum(1 for r in rows if etype(r) == "AMR")
+    n_elements  = len(rows)
+    n_stress    = sum(1 for r in rows if etype(r) == "STRESS")
+    n_virulence = sum(1 for r in rows if etype(r) == "VIRULENCE")
 
     checks = []
     def check(name, ok, detail):
@@ -58,12 +70,14 @@ process VALIDATION_GATE {
     # Control-specific expectations. These are the checks that would catch a pipeline
     # that silently produces plausible-looking garbage.
     if role == "negative_control":
-        check("negative_control_is_empty", n_amr == 0,
-              f"{n_amr} AMR calls on shuffled sequence (must be 0)")
+        check("negative_control_is_empty", n_elements == 0,
+              f"{n_elements} elements of any type on shuffled sequence (must be 0; "
+              f"of which {n_amr} AMR)")
     else:
         check("positive_expectation_met", n_amr > 0,
-              f"{n_amr} AMR determinants found; these are clinical carbapenemase/ESBL "
-              f"isolates, so zero calls would indicate pipeline failure")
+              f"{n_amr} AMR determinants found (plus {n_stress} stress, "
+              f"{n_virulence} virulence elements, not counted here); these are clinical "
+              f"carbapenemase/ESBL isolates, so zero AMR calls would indicate failure")
 
     hard_fail = [c for c in checks if c["status"] == "FAIL"]
     # A negative control that assembles badly has not failed — that is the expected
@@ -79,7 +93,9 @@ process VALIDATION_GATE {
     out = {
         "sample_id": "${meta.id}", "role": role, "verdict": verdict,
         "flye_status": flye["flye_status"],
-        "amr_calls": n_amr, "mean_depth": depth, "n50": n50,
+        "amr_calls": n_amr, "total_elements": n_elements,
+        "stress_calls": n_stress, "virulence_calls": n_virulence,
+        "mean_depth": depth, "n50": n50,
         "total_len": total_len, "n_contigs": n_contigs, "breadth_1x": breadth,
         "amr_result_interpretable": interpretable,
         "checks": checks,
