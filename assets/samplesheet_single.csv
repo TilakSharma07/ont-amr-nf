@@ -1,0 +1,2 @@
+sample_id,accession,species,role,bioproject,biosample,strain,isolation_source,country,collection_date,instrument,chemistry,total_bases,reads,mean_read_len_bp,est_depth_x,study,note
+KP_ES_7636,SRR36388034,Klebsiella pneumoniae,test,PRJNA1378463,SAMN53838466,#7636,urine,Spain: Cantabria,2023-12-13,MinION,R10.4.1,187090861,56169,3331,35.3,"Emergence of CP-K. Pneumoniae ST5994 in Cantabria, Spain","Carbapenemase-producing K. pneumoniae ST5994, Spain outbreak; expect carbapenemase gene"

@@ -1,0 +1,36 @@
+# Nextflow runtime
+work/
+.nextflow/
+.nextflow.log*
+.conda-cache/
+
+# Sequencing data is NOT committed: accessions in assets/samplesheet.csv are the
+# canonical reference, and the pipeline re-fetches byte-identical input from SRA.
+data/raw/*.fastq
+data/raw/*.fastq.gz
+data/raw/*.fq.gz
+data/*.pod5
+*.bam
+*.bai
+*.sra
+
+# Assemblies are regenerable outputs, not sources
+results/assembly/*.fasta
+results/reads/
+
+# Keep the small, auditable result tables and figures
+!results/*.tsv
+!results/*.md
+!docs/figures/*.png
+
+# Local toolchain
+tools/
+env/
+*.tar.gz
+
+# Editors / OS
+.DS_Store
+__pycache__/
+*.pyc
+.idea/
+.vscode/
