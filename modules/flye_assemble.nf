@@ -29,7 +29,7 @@ process FLYE_ASSEMBLE {
     # the status and let the validation gate decide what it means.
     set +e
     flye \\
-        ${params.flye_mode} ${reads} \\
+        ${params.flye_mode} "${reads}" \\
         --genome-size ${params.genome_size} \\
         --iterations ${params.flye_iterations} \\
         --threads ${task.cpus} \\

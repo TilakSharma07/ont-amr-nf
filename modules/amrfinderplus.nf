@@ -22,17 +22,41 @@ process AMRFINDERPLUS {
         'Escherichia coli'     : 'Escherichia'
     ].get(meta.species, null)
     def org_arg = (org && meta.role != 'negative_control') ? "--organism ${org}" : ""
-    def db_arg  = params.amrfinder_db ? "--database ${params.amrfinder_db}" : ""
+    // Quote the database path. It is user-supplied and routinely contains spaces —
+    // an external volume ("/media/user/MY DRIVE/db"), a macOS "Macintosh HD" path, a
+    // Windows "Program Files" path. Unquoted, the shell splits it on whitespace and
+    // amrfinder rejects the fragment as a positional parameter. This is invisible on
+    // a developer machine whose paths happen to have no spaces.
+    def db_arg  = params.amrfinder_db ? "--database '${params.amrfinder_db}'" : ""
     """
+    # Resolve the database version FIRST, so it is recorded on every path through this
+    # process — including the empty-assembly path below. It must be queried WITH
+    # --database, or amrfinder looks in its default location, finds nothing, and the
+    # version silently becomes a placeholder. An AMR call is only interpretable against
+    # a known database version, so an unidentifiable database is a hard failure rather
+    # than a note in a log.
+    db_version=\$(amrfinder --database_version ${db_arg} 2>&1 | grep -oP 'Database version: \\K.*' || true)
+    if [ -z "\$db_version" ]; then
+        echo "ERROR: could not determine the AMRFinderPlus database version for ${meta.id}" >&2
+        echo "  (queried with: amrfinder --database_version ${db_arg})" >&2
+        amrfinder --database_version ${db_arg} >&2 2>&1 || true
+        exit 1
+    fi
+
+    write_versions() {
+        printf '"${task.process}":\\n    amrfinderplus: %s\\n    amrfinderplus_db: %s\\n' \\
+            "\$(amrfinder --version)" "\$db_version" > versions.yml
+    }
+
     # An empty assembly reaches here when Flye produced nothing (expected for the
     # negative control). Emit a header-only result rather than failing: "no assembly,
     # therefore no calls" is a real outcome that the validation gate must see, and it
     # is different from "assembly present, no calls found".
-    if [ ! -s ${assembly} ]; then
+    if [ ! -s "${assembly}" ]; then
         printf 'Name\\tElement symbol\\tElement name\\tClass\\tSubclass\\t%% Coverage of reference\\t%% Identity to reference\\n' \\
             > ${meta.id}.amrfinder.tsv
         echo "no assembly for ${meta.id}: emitted header-only call set" > ${meta.id}.amrfinder.log
-        printf '"%s":\\n    amrfinderplus: %s\\n' "${task.process}" "\$(amrfinder --version)" > versions.yml
+        write_versions
         exit 0
     fi
 
@@ -40,7 +64,7 @@ process AMRFINDERPLUS {
     # can be made about shuffled sequence, and we want the least-filtered, most
     # permissive call mode applied to it. If anything survives there, we want to see it.
     amrfinder \\
-        --nucleotide ${assembly} \\
+        --nucleotide "${assembly}" \\
         ${org_arg} \\
         ${db_arg} \\
         --ident_min ${params.amr_min_ident} \\
@@ -57,7 +81,7 @@ process AMRFINDERPLUS {
         exit 1
     fi
 
-    printf '"${task.process}"\\n    amrfinderplus: %s\\n    amrfinderplus_db: %s\\n' "\$(amrfinder --version)" "\$(amrfinder --database_version 2>&1 | grep -oP 'Database version: \\K.*' || echo 'bundled')" > versions.yml
+    write_versions
     """
 
     stub:
