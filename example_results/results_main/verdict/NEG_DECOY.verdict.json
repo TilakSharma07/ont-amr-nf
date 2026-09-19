@@ -4,6 +4,9 @@
   "verdict": "PASS",
   "flye_status": "no_assembly",
   "amr_calls": 0,
+  "total_elements": 0,
+  "stress_calls": 0,
+  "virulence_calls": 0,
   "mean_depth": 0.0,
   "n50": 0,
   "total_len": 0,
@@ -44,7 +47,7 @@
     {
       "check": "negative_control_is_empty",
       "status": "PASS",
-      "detail": "0 AMR calls on shuffled sequence (must be 0)"
+      "detail": "0 elements of any type on shuffled sequence (must be 0; of which 0 AMR)"
     }
   ]
 }

@@ -24,7 +24,9 @@ SUITES = [
     ("test_samplesheet.py", False),
     ("test_validation_gate.py", True),
     ("test_control_gate.py", True),
-    ("test_aggregate.py", False),
+    # Mostly self-contained fixtures, but one check reconciles the published
+    # summaries against the published call table, so it needs the results dir.
+    ("test_aggregate.py", True),
     ("test_figures.py", True),
 ]
 

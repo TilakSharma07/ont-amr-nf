@@ -3,7 +3,10 @@
   "role": "test",
   "verdict": "PASS",
   "flye_status": "assembled",
-  "amr_calls": 43,
+  "amr_calls": 20,
+  "total_elements": 43,
+  "stress_calls": 23,
+  "virulence_calls": 0,
   "mean_depth": 29.88,
   "n50": 5425447,
   "total_len": 5887566,
@@ -44,7 +47,7 @@
     {
       "check": "positive_expectation_met",
       "status": "PASS",
-      "detail": "43 AMR determinants found; these are clinical carbapenemase/ESBL isolates, so zero calls would indicate pipeline failure"
+      "detail": "20 AMR determinants found (plus 23 stress, 0 virulence elements, not counted here); these are clinical carbapenemase/ESBL isolates, so zero AMR calls would indicate failure"
     }
   ]
 }

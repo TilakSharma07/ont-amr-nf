@@ -254,7 +254,70 @@ def check_null_depth_does_not_print_as_none():
     return True
 
 
-def main():
+def check_published_counts_agree(results):
+    """Every count the summaries report must be recomputable from the call table.
+
+    The three published files can disagree without anything crashing, and that is
+    exactly what shipped: validation_summary.tsv reported amr_calls=55 for an isolate
+    whose call table holds 29 resistance determinants (55 is every element, including
+    20 metal-tolerance genes), while run_summary.md reported 26 (distinct AMR symbols)
+    and the new total_elements column was NA. Three files, three numbers, no error
+    anywhere -- the verdicts were published by the pre-fix gate and the aggregator
+    faithfully copied them forward.
+
+    The other checks in this file build their own fixtures, so none of them can see a
+    stale input. This one reads what is actually shipped.
+    """
+    import csv as _csv
+    import os as _os
+
+    label = "published counts agree with the call table"
+    calls = _os.path.join(results, "amr_calls.tsv")
+    summary = _os.path.join(results, "validation_summary.tsv")
+    if not (_os.path.exists(calls) and _os.path.exists(summary)):
+        print(f"  SKIP  {label} (no published amr_calls.tsv/validation_summary.tsv)")
+        return None
+
+    with open(calls) as fh:
+        rows = list(_csv.DictReader(fh, delimiter="\t"))
+    with open(summary) as fh:
+        vrows = list(_csv.DictReader(fh, delimiter="\t"))
+
+    def etype(r):
+        return (r.get("element_type") or r.get("Element type") or "").upper()
+
+    per_amr, per_all = {}, {}
+    for r in rows:
+        s = r["sample_id"]
+        per_all[s] = per_all.get(s, 0) + 1
+        if etype(r) == "AMR":
+            per_amr[s] = per_amr.get(s, 0) + 1
+
+    bad = []
+    for v in vrows:
+        s = v["sample_id"]
+        exp_amr = per_amr.get(s, 0)
+        exp_all = per_all.get(s, 0)
+        got_amr = v.get("amr_calls", "NA")
+        got_all = v.get("total_elements", "NA")
+        if str(got_amr) != str(exp_amr):
+            bad.append(f"{s}: amr_calls={got_amr}, call table has {exp_amr} AMR rows")
+        # total_elements may legitimately be absent for samples predating the column,
+        # but if it is populated it has to be right.
+        if str(got_all) not in ("NA", "") and str(got_all) != str(exp_all):
+            bad.append(f"{s}: total_elements={got_all}, call table has {exp_all} rows")
+
+    if bad:
+        print(f"  FAIL  {label}")
+        for b in bad[:8]:
+            print(f"        {b}")
+        return False
+    print(f"  PASS  {label}")
+    print(f"        {len(vrows)} samples reconcile against {len(rows)} call rows")
+    return True
+
+
+def main(results=None):
     print("aggregate.nf\n")
     ok = [
         check_titration_counts_amr_only(),
@@ -263,6 +326,10 @@ def main():
         check_contaminated_control_is_loud(),
         check_null_depth_does_not_print_as_none(),
     ]
+    if results:
+        r = check_published_counts_agree(results)
+        if r is not None:
+            ok.append(r)
     print()
     if all(ok):
         print(f"all {len(ok)} checks passed")
@@ -272,4 +339,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else None))

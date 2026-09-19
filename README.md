@@ -353,6 +353,17 @@ were exactly that until these tests were written:
   this README rather than an assertion in the code. Had the shuffle silently stopped
   shuffling, every isolate's determinants would have been reproduced on the control and
   the run would still have reported success.
+- Nothing reconciled the published files against each other. Fixing the element-counting
+  bug above fixed the *code*, but the verdicts already on disk had been written by the
+  old gate, and the aggregator copied their numbers forward without complaint. The
+  shipped result was three files disagreeing three ways about the same isolate:
+  `validation_summary.tsv` said `amr_calls=55`, `run_summary.md` said 26, and the call
+  table held 29 AMR rows out of 55 elements — with the new `total_elements` column
+  reading `NA`, since the old verdicts predated it. No stage errored; every number was
+  the faithful product of the stage that produced it. Every other check in this suite
+  builds its own fixtures, which is precisely why none of them could see a stale input.
+  `check_published_counts_agree` reads what is actually shipped and recomputes each
+  count from the call table.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source

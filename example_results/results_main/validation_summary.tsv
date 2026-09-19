@@ -1,7 +1,7 @@
 sample_id	role	verdict	flye_status	amr_calls	total_elements	mean_depth	n50	total_len	n_contigs	interpretable	failed_checks
 CALLER_CONTROL	caller_control	PASS	not_applicable	0	0	NA	NA	NA	NA	True	-
-EC_PE_M09449	cross_species	PASS	assembled	55	NA	31.16	4740491	5115139	7	True	-
-KP_BG_81	test	PASS	assembled	47	NA	36.47	5437787	5706551	4	True	-
-KP_ES_7636	test	PASS	assembled	43	NA	29.88	5425447	5887566	11	True	-
-KP_ES_7983	clonal_replicate	PASS	assembled	43	NA	26.1	5310109	5617970	3	True	-
-NEG_DECOY	negative_control	PASS	no_assembly	0	NA	0.0	0	0	0	True	assembly_produced;depth;n50;genome_size;breadth
+EC_PE_M09449	cross_species	PASS	assembled	29	55	31.16	4740491	5115139	7	True	-
+KP_BG_81	test	PASS	assembled	24	47	36.47	5437787	5706551	4	True	-
+KP_ES_7636	test	PASS	assembled	20	43	29.88	5425447	5887566	11	True	-
+KP_ES_7983	clonal_replicate	PASS	assembled	20	43	26.1	5310109	5617970	3	True	-
+NEG_DECOY	negative_control	PASS	no_assembly	0	0	0.0	0	0	0	True	assembly_produced;depth;n50;genome_size;breadth
