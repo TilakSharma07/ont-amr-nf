@@ -142,6 +142,244 @@ def titration_titles_match_data(results, figdir):
     return True
 
 
+def control_titles_match_data():
+    """Figure 1's titles were hard-coded too: "Both controls return zero calls" was
+    asserted regardless of what the controls returned. That is the one claim in the
+    whole repo that must never be made on faith -- a contaminated control means every
+    call in the run is suspect, and a title that says "zero calls" over a dirty control
+    actively hides it. Check all three branches, contamination included.
+    """
+    import csv as _csv
+    import shutil as _shutil
+
+    scenarios = {
+        # (samples: [(sample_id, role, n_amr, n50_mb, depth)], must, must_not)
+        "clean controls": (
+            [("KP_A", "test", 20, 5.4, 30.0), ("NEG_DECOY", "negative_control", 0, 0.0, 0.0),
+             ("CALLER_CONTROL", "caller_control", 0, 0.0, 0.0)],
+            ["controls return zero calls"], ["contamination"]),
+        "contaminated read-level control": (
+            [("KP_A", "test", 20, 5.4, 30.0), ("NEG_DECOY", "negative_control", 3, 0.0, 0.0)],
+            ["Control contamination", "NEG DECOY"], ["return zero calls"]),
+        "no controls in the run": (
+            [("KP_A", "test", 20, 5.4, 30.0)],
+            ["no controls in this run"], ["controls return zero calls", "contamination"]),
+    }
+
+    failures = []
+    for label, (samples, must, must_not) in scenarios.items():
+        scratch = tempfile.mkdtemp(prefix="ctl-")
+        with open(os.path.join(scratch, "validation_summary.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "role", "verdict", "flye_status", "amr_calls",
+                        "mean_depth", "n50", "total_len", "n_contigs",
+                        "interpretable", "failed_checks"])
+            for sid, role, n_amr, n50, depth in samples:
+                w.writerow([sid, role, "PASS", "ok", n_amr, depth, int(n50 * 1e6),
+                            int(n50 * 1e6), 1, "yes", "-"])
+        with open(os.path.join(scratch, "amr_calls.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "gene_symbol", "gene_name", "element_type",
+                        "subtype", "drug_class", "subclass", "method",
+                        "pct_identity", "pct_coverage", "contig"])
+            for sid, role, n_amr, n50, depth in samples:
+                for k in range(n_amr):
+                    w.writerow([sid, f"gene{k}", f"gene {k}", "AMR", "POINT",
+                                "BETA-LACTAM", "-", "EXACTX", "100.0", "100.0", "c1"])
+        with open(os.path.join(scratch, "assembly_metrics.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "role", "species", "n_contigs", "total_len",
+                        "n50", "largest", "gc_percent", "mean_depth", "breadth_1x"])
+            for sid, role, n_amr, n50, depth in samples:
+                w.writerow([sid, role, "Klebsiella pneumoniae", 1, int(n50 * 1e6),
+                            int(n50 * 1e6), int(n50 * 1e6), 57.0, depth, 0.99])
+
+        g = load(results=scratch, figdir=scratch)
+        captured = []
+        real_savefig = g["plt"].Figure.savefig
+
+        def spy(self, *a, **kw):
+            for ax in self.get_axes():
+                for loc in ("left", "center", "right"):
+                    txt = ax.get_title(loc=loc)
+                    if txt:
+                        captured.append(txt)
+            return real_savefig(self, *a, **kw)
+
+        g["plt"].Figure.savefig = spy
+        try:
+            g["figure_controls"]()
+        finally:
+            g["plt"].Figure.savefig = real_savefig
+
+        if not captured:
+            failures.append(f"{label}: figure_controls produced no titled axes")
+            _shutil.rmtree(scratch, ignore_errors=True)
+            continue
+        joined = " | ".join(captured)
+        for s in must:
+            if s not in joined:
+                failures.append(f"{label}: expected {s!r} in titles, got {joined!r}")
+        for s in must_not:
+            if s in joined:
+                failures.append(f"{label}: title wrongly claims {s!r}: {joined!r}")
+        _shutil.rmtree(scratch, ignore_errors=True)
+
+    if failures:
+        print("  FAIL  control titles describe the data they were given")
+        for f in failures[:3]:
+            print(f"        {f[:150]}")
+        return False
+    print("  PASS  control titles describe the data they were given"
+          f"\n        {len(scenarios)} data shapes incl. a contaminated control")
+    return True
+
+
+def _write_profile_inputs(scratch, samples, genes_per_sample):
+    """Minimal amr_calls.tsv + validation_summary.tsv that figure_profile() accepts."""
+    import csv as _csv
+    with open(os.path.join(scratch, "amr_calls.tsv"), "w", newline="") as fh:
+        w = _csv.writer(fh, delimiter="\t")
+        w.writerow(["sample_id", "gene_symbol", "element_type", "element_subtype",
+                    "class_", "pct_identity", "pct_coverage", "method"])
+        for s in samples:
+            for gene in genes_per_sample[s]:
+                w.writerow([s, gene, "AMR", "AMR", "BETA-LACTAM",
+                            "99.50", "100.00", "BLASTX"])
+    with open(os.path.join(scratch, "validation_summary.tsv"), "w", newline="") as fh:
+        w = _csv.writer(fh, delimiter="\t")
+        w.writerow(["sample_id", "role", "verdict", "checks_failed",
+                    "amr_calls", "total_elements", "mean_depth", "n50"])
+        for s in samples:
+            w.writerow([s, "test", "PASS", "", len(genes_per_sample[s]),
+                        len(genes_per_sample[s]), "30.0", "5000000"])
+
+
+def profile_title_matches_data():
+    """Figure 2's title must describe the matrix it drew, not a fixed narrative."""
+    import shutil as _shutil
+    scenarios = {
+        # one sample: nothing is shared, so the title must not claim sharing
+        "single sample": (
+            ["KP_X"], {"KP_X": ["blaCTX-M-15", "qnrB1", "tet(A)"]},
+            ["3", "KP X"], ["shared", "lineage"]),
+        # every gene in every sample: sharing is total
+        "fully shared": (
+            ["KP_X", "KP_Y"], {"KP_X": ["blaCTX-M-15", "qnrB1"],
+                               "KP_Y": ["blaCTX-M-15", "qnrB1"]},
+            ["All 2", "shared", "2 isolates"], ["of 2 resistance"]),
+        # partial overlap: the count of shared genes must be stated, not implied
+        "partly shared": (
+            ["KP_X", "KP_Y"], {"KP_X": ["blaCTX-M-15", "qnrB1"],
+                               "KP_Y": ["blaCTX-M-15", "tet(A)"]},
+            ["1 of 3", "shared"], ["All 3"]),
+    }
+    failures = []
+    for label, (samples, genes, must, must_not) in scenarios.items():
+        scratch = tempfile.mkdtemp(prefix="prof-")
+        _write_profile_inputs(scratch, samples, genes)
+        g = load(results=scratch, figdir=scratch)
+
+        captured = []
+        real_savefig = g["plt"].Figure.savefig
+
+        def spy(self, *a, **kw):
+            for ax in self.get_axes():
+                for loc in ("left", "center", "right"):
+                    txt = ax.get_title(loc=loc)
+                    if txt:
+                        captured.append(txt)
+            return real_savefig(self, *a, **kw)
+
+        g["plt"].Figure.savefig = spy
+        try:
+            g["figure_profile"]()
+        finally:
+            g["plt"].Figure.savefig = real_savefig
+
+        if not captured:
+            failures.append(f"{label}: figure_profile produced no titled axes")
+            _shutil.rmtree(scratch, ignore_errors=True)
+            continue
+        joined = " | ".join(captured)
+        for s in must:
+            if s not in joined:
+                failures.append(f"{label}: expected {s!r} in title, got {joined!r}")
+        for s in must_not:
+            if s.lower() in joined.lower():
+                failures.append(f"{label}: title wrongly claims {s!r}: {joined!r}")
+        _shutil.rmtree(scratch, ignore_errors=True)
+
+    if failures:
+        print("  FAIL  figure 2 title describes the data it drew")
+        for f in failures[:3]:
+            print(f"        {f[:150]}")
+        return False
+    print("  PASS  figure 2 title describes the data it drew")
+    return True
+
+
+def geometry_check_is_enforced():
+    """verify() must raise on a violation, and must ignore undrawn tick labels.
+
+    Two separate defects lived here. It only printed, so a real fig3 violation was
+    written and reported as a success; and it counted tick labels outside the axis
+    view interval, which matplotlib never paints, so it invented violations that
+    could not be fixed by moving anything.
+    """
+    import shutil as _shutil
+    scratch = tempfile.mkdtemp(prefix="geom-")
+    g = load(results=scratch, figdir=scratch)
+    plt = g["plt"]
+    failures = []
+
+    # (a) deliberately overlapping text must raise
+    fig, ax = plt.subplots(figsize=(3, 2), dpi=100)
+    ax.text(0.5, 0.5, "AAAAAAAAAAAAAAAA", ha="center", transform=ax.transAxes)
+    ax.text(0.5, 0.5, "BBBBBBBBBBBBBBBB", ha="center", transform=ax.transAxes)
+    try:
+        g["verify"](fig, "overlap-probe")
+        failures.append("overlapping text did not raise")
+    except g["FigureGeometryError"]:
+        pass
+    plt.close(fig)
+
+    # (b) text pushed off the canvas must raise
+    fig, ax = plt.subplots(figsize=(3, 2), dpi=100)
+    ax.text(-3.0, 0.5, "far off to the left", transform=ax.transAxes)
+    try:
+        g["verify"](fig, "offcanvas-probe")
+        failures.append("off-canvas text did not raise")
+    except g["FigureGeometryError"]:
+        pass
+    plt.close(fig)
+
+    # (c) out-of-view tick labels must NOT raise: matplotlib does not draw them.
+    #     This is the fig3 geometry -- an x range starting at 1.5 keeps the "0"
+    #     tick label out of view, and a y range starting at 0 does the same to "-1".
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7, 3), dpi=300)
+    a1.plot([5, 10, 20, 40], [0.70, 0.75, 1.0, 1.0])
+    a1.set_xlim(1.5, 43.5)
+    a1.set_ylim(-0.04, 1.12)
+    a2.plot([5, 10, 20, 40], [0.05, 0.20, 5.42, 5.42])
+    a2.set_xlim(1.5, 43.5)
+    fig.tight_layout()
+    try:
+        g["verify"](fig, "undrawn-ticks-probe")
+    except g["FigureGeometryError"] as e:
+        failures.append(f"undrawn tick labels counted as a violation: {e}")
+    plt.close(fig)
+
+    _shutil.rmtree(scratch, ignore_errors=True)
+    if failures:
+        print("  FAIL  geometry check is enforced and counts only drawn text")
+        for f in failures:
+            print(f"        {f[:150]}")
+        return False
+    print("  PASS  geometry check is enforced and counts only drawn text")
+    return True
+
+
 def main(results):
     figdir = tempfile.mkdtemp(prefix="figtest-")
     print(f"results={results}\nscratch={figdir}\n")
@@ -210,6 +448,20 @@ def main(results):
     #    floor"), which would have survived a run showing complete recovery at every
     #    depth. A title is a claim; this checks the claim against the numbers.
     ok.append(titration_titles_match_data(results, figdir))
+
+    # 6. Same rule for figure 1, where the stakes are higher: "Both controls return
+    #    zero calls" was also hard-coded, so it would have been printed over a
+    #    contaminated control -- hiding the one result that invalidates the whole run.
+    ok.append(control_titles_match_data())
+
+    # 7. Same rule for figure 2, which claimed "Shared core resistance genes plus
+    #    lineage-specific determinants" unconditionally -- false on a single-sample
+    #    panel, where nothing is shared and there are no lineages to differ.
+    ok.append(profile_title_matches_data())
+
+    # 8. verify() must raise, not print. It spent several runs detecting a real fig3
+    #    violation while the script wrote the figure and exited 0.
+    ok.append(geometry_check_is_enforced())
 
     print()
     if all(ok):

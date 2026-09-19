@@ -86,10 +86,22 @@ nextflow run . -profile conda
 
 # real run against reads already on disk (stays offline)
 nextflow run . -profile conda --reads_dir /path/to/fastq
+
+# work directory on an external drive without symlink support (FAT32/exFAT)
+nextflow run . -profile conda,portable_fs -work-dir /media/usb/work
 ```
 
 Reads are fetched from SRA by accession if not found locally; every fetch is md5-recorded
 in `results/reads/*.md5`.
+
+**If the work directory is on a FAT32/exFAT volume, add `-profile portable_fs`.** Nextflow
+stages process inputs as symlinks, which that filesystem cannot represent, and the run
+dies with `ln: failed to create symbolic link: Operation not permitted` partway through —
+not at launch, but at the first process that stages a file. `portable_fs` switches staging
+to copy mode. This run hit it: the assemblies were developed on an ext4 volume and the
+titration was later re-run from an external drive, where every task that had not already
+been cached failed on the first symlink. Copy mode costs extra I/O on large FASTQs, which
+is the reason it is not the default.
 
 ## Outputs
 
@@ -233,6 +245,53 @@ total_bp      5,887,566   5,887,566
 gc_fraction   0.569597    0.569597
 ```
 
+**4. The 20x depth floor is measured, not asserted.** The gate refuses to report absence
+below 20x, and that threshold would be an arbitrary number if nothing tested it.
+`--run_titration` subsamples one isolate (`KP_ES_7636`, 29.9x) to 5x, 10x, 20x and 40x and
+re-runs the identical calling path on each:
+
+| Target | Realised | N50 | Determinants | Recovery | Missed |
+|---|---|---|---|---|---|
+| 5x | 4.71x | 53,206 | 17 / 20 | 0.7000 | `blaOXA-1`, `blaTEM-1`, `emrD`, `gyrA_S83I`, `oqxA`, `oqxB19` |
+| 10x | 8.42x | 203,873 | 18 / 20 | 0.7500 | `blaCTX-M-15`, `oqxB19`, `parC_S80I`, `qnrB1`, `tet(A)` |
+| 20x | 16.90x | 5,425,465 | 20 / 20 | 1.0000 | — |
+| 40x | 29.88x | 5,425,446 | 20 / 20 | 1.0000 | — |
+
+Recovery is complete at 20x and above and degrades below it — 75% at 10x, 70% at 5x. The
+mechanism is visible in the N50 column: contiguity collapses by two orders of magnitude
+(5.4 Mb → 53 kb) before recovery starts to fall, which is what a short-contig assembly
+does to a caller that needs a gene-length alignment. The determinants lost at 10x include
+`blaCTX-M-15` and `parC_S80I` — an ESBL and a fluoroquinolone-resistance mutation, both
+clinically actionable — so this is not a matter of losing marginal hits. That is the
+argument for the floor: below it, a report of "absent" is a statement about depth, not
+about the genome.
+
+Recovery is measured over resistance determinants only (20 at full depth), not over all
+43 elements. Counting `STRESS` elements in as well reported 0.8837 at 10x instead of
+0.7500 — the aggregator did exactly that until `tests/test_aggregate.py` pinned it. The
+stress-tolerance genes are numerous and largely depth-insensitive in this sample, so
+including them dilutes the loss of the calls the pipeline exists to report. The inflated
+number is also the flattering one, which is the direction an unchecked metric tends to
+drift.
+
+Two further details are visible in the call sets and worth knowing before reading any
+low-depth AMR result. First, the losses are partly *allele* losses rather than gene
+losses: at 10x the caller reports `blaCTX-M` and `qnrB` where full depth resolves
+`blaCTX-M-15` and `qnrB1`. The gene is detected; the allele is not, because the
+distinguishing bases are not covered confidently enough. For a beta-lactamase family
+where alleles differ in spectrum, "`blaCTX-M` present" is a materially weaker statement
+than the full-depth call. The 5x `blaTEM` call is weaker still: 53.85% coverage of the
+reference, i.e. the gene is split across a contig boundary. Second, low depth produces
+calls that are *absent* at full
+depth: `ompK36_L184FfsTer14` at 5x and `nfsB_E175RfsTer2` at 10x are both frameshift
+calls on fragmented assemblies, which is how assembly error looks to a point-mutation
+caller. So a low-depth run does not simply return a subset of the truth — it returns a
+different set, in both directions.
+
+Note the 40x row realises 29.88x, not 40x: the input only contains 29.9x, so the request
+saturates. The pipeline records what was realised by remapping rather than what was asked
+for, which is why the two highest rows are near-duplicates instead of a clean 2x step.
+
 ### Reading the negative control's PASS
 
 `NEG_DECOY` shows `PASS` with `failed_checks = assembly_produced;depth;n50;genome_size;breadth`.
@@ -293,6 +352,20 @@ would route the decoy to the positive-expectation branch, scoring the one sample
 come back empty as though it had to come back full), a duplicate id, and an id that is not
 filename-safe. `test_figures.py` re-renders the real figure and then mutates the plotting
 source three ways: mislabelled leaders, a dropped label, and an unknown samplesheet role.
+It also renders the titration figure against three shapes of synthetic data — complete
+recovery, collapse at low depth, and high-but-imperfect — and checks each panel title
+against the numbers it was given, because both titles were originally hard-coded
+conclusions written before the titration had produced any data.
+
+That suite is also the source of the sharpest lesson in this repo. It reported
+`all 4 checks passed` while pointed at a directory containing none of the pipeline's
+tables: `make_figures.py` returns early when its input tables are absent, so the baseline
+"rendered clean" without drawing anything and every mutation "rendered without complaint"
+because the mutated code never ran. Four green checks over a figure that did not exist.
+It now refuses to start unless the tables it needs are present, and the baseline asserts a
+figure file was written rather than only that nothing raised — a skipped figure raises
+nothing either. The same shape of bug is worth looking for in any test suite whose subject
+can silently do nothing.
 
 ## Scope and limits
 

@@ -96,9 +96,21 @@ process AGGREGATE_RESULTS {
     # Built here rather than lower down: the titration block below reads it, and it
     # was previously defined after its first use (a NameError that only fired with
     # --run_titration true, which no completed run had used).
+    # AMR only. AMRFinderPlus returns AMR, STRESS and VIRULENCE elements in one
+    # table, and counting all three under "determinants recovered" both inflates the
+    # denominator and flatters the curve: the stress-tolerance genes are numerous and
+    # largely depth-insensitive here, so mixing them in dilutes the loss of the calls
+    # that matter. It also silently disagreed with every other number in the repo --
+    # the gate's positive expectation, the figures and the results table all count AMR
+    # only. Measured on this run, the mix reported 0.8837 recovery at 10x where the
+    # AMR-only figure is 0.7500, and the inflated version is the one that would have
+    # been quoted.
     genes_per_sample = {}
+    elements_per_sample = {}
     for r in amr_rows:
-        genes_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
+        elements_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
+        if str(r.get("element_type", "")).upper() == "AMR":
+            genes_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
 
     tit = [v for v in vrows if v["role"] == "titration"]
     full_sets = {}
@@ -174,10 +186,20 @@ process AGGREGATE_RESULTS {
     # by design -- no reads, so no depth or N50 -- but its emptiness is a binding check
     # there, and its verdict appears in vrows above). The narrative below reads its call
     # set directly so the prose can name the genes if any survived.
-    cc_genes = genes_per_sample.get("CALLER_CONTROL")
-    if cc_genes is None:
+    #
+    # Presence is read from the verdict rows, NOT from the call set. Inferring it from
+    # the calls made a control that returned zero calls indistinguishable from one that
+    # never ran -- and zero calls is the PASS case, so the pipeline reported its own
+    # best result as "No caller-level control was run". That happened: results_main has
+    # CALLER_CONTROL.amrfinder.tsv with zero calls and a run summary denying the control
+    # existed. A reviewer reading that summary would conclude the control was skipped.
+    cc_rows = [v for v in vrows if v["role"] == "caller_control"]
+    if not cc_rows:
         L.append("\\nNo caller-level control was run (`--caller_control false`).")
     else:
+        cc_genes = elements_per_sample.get("CALLER_CONTROL", set())
+        # Elements of ANY class, not AMR only: a control must return nothing at all,
+        # not merely nothing under one label.
         n_cc = sum(1 for r in amr_rows if r["sample_id"] == "CALLER_CONTROL")
         if n_cc == 0:
             L.append(f"\\n**Caller-level control** (tests the gene caller) — a real assembly "

@@ -172,12 +172,36 @@ def text_extent(t, r):
         return t.get_window_extent(r)
 
 
+class FigureGeometryError(RuntimeError):
+    """A rendered figure has overlapping or off-canvas text."""
+
+
 def verify(fig, tag):
-    """Geometric check: no text-text or text-spine overlap, nothing off-canvas."""
+    """Geometric check: no text-text or text-spine overlap, nothing off-canvas.
+
+    Raises FigureGeometryError on a violation, so a broken figure fails the run
+    instead of being written and reported as fine.
+    """
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
+
+    # A tick label whose tick falls outside its axis view interval still reports
+    # get_visible() == True and still has a window extent, but matplotlib never paints
+    # it — hiding those labels leaves the rendered PNG byte-for-byte identical. Counting
+    # them produced phantom violations: fig3 reported an overlap between an x-tick "0"
+    # and a y-tick "-1" on a panel whose x range starts at 1.5 and whose y range starts
+    # at 0, so neither label was ever on the canvas. Drop them before measuring.
+    undrawn = set()
+    for ax in fig.axes:
+        for axis, lim in ((ax.xaxis, ax.get_xlim()), (ax.yaxis, ax.get_ylim())):
+            lo, hi = sorted(lim)
+            for locs, labels in ((axis.get_majorticklocs(), axis.get_majorticklabels()),
+                                 (axis.get_minorticklocs(), axis.get_minorticklabels())):
+                undrawn.update(lab for loc, lab in zip(locs, labels)
+                               if not (lo <= loc <= hi))
+
     texts = [(t, text_extent(t, r)) for t in fig.findobj(mpl.text.Text)
-             if t.get_text().strip() and t.get_visible()]
+             if t.get_text().strip() and t.get_visible() and t not in undrawn]
     spines = [(s, s.get_window_extent(r)) for ax in fig.axes
               for s in ax.spines.values() if s.get_visible()]
     ticks = {ax: set(ax.get_xticklabels(which="both") + ax.get_yticklabels(which="both"))
@@ -199,6 +223,11 @@ def verify(fig, tag):
                 panel = fig.axes.index(ax_) if ax_ in fig.axes else "fig"
                 print(f"    {t_.get_text()!r:22s} panel={panel} "
                       f"bbox=({bt.x0:.0f},{bt.y0:.0f})-({bt.x1:.0f},{bt.y1:.0f})")
+        # Raise rather than print. This check existed for several runs while only
+        # printing, and a real fig3 violation went unnoticed because the script still
+        # wrote the figure and exited 0 — a self-check with no failure path is a comment.
+        raise FigureGeometryError(
+            f"{tag}: {len(bad)} overlapping text pair(s), {len(off)} off-canvas label(s)")
 
 
 # =============================================================================
@@ -256,7 +285,30 @@ def figure_controls():
     ax1.set_yticklabels([r[0].replace("_", " ") for r in rows])
     ax1.invert_yaxis()
     ax1.set_xlabel("elements called (filled = resistance determinants)")
-    ax1.set_title("Both controls return zero calls;\nevery isolate returns a full determinant set")
+    # Same rule as the titration titles: state what these rows actually show. This
+    # figure is rendered for any run, including ones launched with --make_decoy false
+    # and --caller_control false, where "both controls return zero calls" would be a
+    # claim about samples that are not on the axis.
+    ctl_rows = [r for r in rows if r[1] in ("negative_control", "caller_control")]
+    iso_rows = [r for r in rows if is_isolate(r[1])]
+    ctl_clean = [r for r in ctl_rows if r[2] == 0]
+    if ctl_rows and len(ctl_clean) == len(ctl_rows) and iso_rows:
+        word = "Both controls" if len(ctl_rows) == 2 else (
+            "The control" if len(ctl_rows) == 1 else f"All {len(ctl_rows)} controls")
+        t1 = (f"{word} return zero calls;\n"
+              f"every isolate returns a full determinant set")
+    elif ctl_rows and ctl_clean != ctl_rows:
+        dirty = [r[0] for r in ctl_rows if r[2] > 0]
+        t1 = ("Control contamination: "
+              + ", ".join(s.replace("_", " ") for s in dirty)
+              + "\nreturned calls and must not be reported")
+    else:
+        lo = min(r[2] for r in iso_rows) if iso_rows else 0
+        hi = max(r[2] for r in iso_rows) if iso_rows else 0
+        span = f"{lo}" if lo == hi else f"{lo}-{hi}"
+        t1 = (f"{len(iso_rows)} isolate(s), {span} resistance determinants each\n"
+              "(no controls in this run)")
+    ax1.set_title(t1)
     xmax = max(r[2] + n_other[r[0]] for r in rows)
     ax1.set_xlim(-3, xmax * 1.22)
     ax1.set_xticks([x for x in range(0, int(xmax) + 1, 10)])
@@ -313,11 +365,20 @@ def figure_controls():
                          arrowprops=dict(arrowstyle="-", lw=0.5, color=col,
                                          shrinkA=1.0, shrinkB=3.5,
                                          connectionstyle="arc3,rad=0.0"))
+        # Controls are labelled at a fixed offset from their marker, but a run where
+        # both controls behave correctly puts them at the same point -- zero calls,
+        # zero depth, zero N50 -- so a single offset stacks the two labels on top of
+        # each other. That is the expected case, not an edge case. Offset each label
+        # within a coincident group so the healthy run is the readable one.
+        ctl_groups = defaultdict(list)
         for d, n50, sid, role in ctl:
-            col = role_style(role)[0]
-            ax2.annotate(sid.replace("_", " "), (d, n50), xytext=(8, 2),
-                         textcoords="offset points", fontsize=SMALL,
-                         color=col, zorder=4)
+            ctl_groups[(round(d, 3), round(n50, 3))].append((sid, role))
+        for (d, n50), members in ctl_groups.items():
+            for k, (sid, role) in enumerate(sorted(members)):
+                col = role_style(role)[0]
+                ax2.annotate(sid.replace("_", " "), (d, n50),
+                             xytext=(8, 2 + 9 * k), textcoords="offset points",
+                             fontsize=SMALL, color=col, zorder=4)
         floor = float(os.environ.get("MIN_DEPTH_X", 20))
         ax2.axvline(floor, color=C_GREY, lw=0.7, ls="--", zorder=1)
         ax2.annotate(f"depth floor ({floor:.0f}x)\nabsence not reported below this",
@@ -325,7 +386,21 @@ def figure_controls():
                      fontsize=SMALL, color=C_GREY, va="bottom", zorder=2)
         ax2.set_xlabel("realised depth (x), measured by remapping")
         ax2.set_ylabel("assembly N50 (Mb)")
-        ax2.set_title("Isolates assemble to near-complete chromosomes;\nthe read-level control does not assemble")
+        # Derived, not asserted. "near-complete chromosomes" is a claim about N50 and
+        # "does not assemble" is a claim about the decoy, and a run without a decoy
+        # (--make_decoy false) has neither on the axis.
+        n50s_iso = [q[1] for q in iso]
+        lo_n50, hi_n50 = (min(n50s_iso), max(n50s_iso)) if n50s_iso else (0, 0)
+        span = f"{lo_n50:.1f}" if abs(hi_n50 - lo_n50) < 0.05 else f"{lo_n50:.1f}-{hi_n50:.1f}"
+        if iso and ctl:
+            t2 = (f"Isolates assemble to {span} Mb N50;\n"
+                  "the read-level control does not assemble")
+        elif iso:
+            t2 = (f"Isolates assemble to {span} Mb N50\n"
+                  "(no read-level control in this run)")
+        else:
+            t2 = "No isolate assemblies in this run"
+        ax2.set_title(t2)
         dmax = max(q[0] for q in pts)
         ax2.set_xlim(-4, dmax * 1.30)
         ax2.set_xticks([x for x in range(0, int(dmax) + 5, 10)])
@@ -382,7 +457,23 @@ def figure_profile():
     ax.set_xticklabels([s.replace("_", " ") for s in samples], rotation=30, ha="right")
     ax.set_yticks(range(len(genes)))
     ax.set_yticklabels(genes, fontsize=SMALL, style="italic")
-    ax.set_title("Shared core resistance genes plus lineage-specific determinants")
+    # Derive the title from the matrix. This said "Shared core resistance genes plus
+    # lineage-specific determinants" unconditionally, which is false whenever the panel
+    # holds a single sample — as it does on a titration run, where there is nothing to
+    # share and no lineages to differ. Count what is actually in M instead.
+    n_core = int(sum(1 for i in range(len(genes)) if not np.isnan(M[i]).any()))
+    if len(samples) == 1:
+        title = (f"{len(genes)} resistance determinants in "
+                 f"{samples[0].replace('_', ' ')}")
+    elif n_core == len(genes):
+        title = (f"All {len(genes)} resistance determinants shared "
+                 f"across {len(samples)} isolates")
+    else:
+        title = (f"{n_core} of {len(genes)} resistance determinants shared "
+                 f"across {len(samples)} isolates")
+    # A long title on a narrow figure (width scales with sample count) ran off the
+    # canvas; wrapping keeps it inside the figure instead of relying on it being short.
+    ax.set_title(title, wrap=True)
     for sp in ax.spines.values():
         sp.set_visible(False)
     ax.tick_params(length=0)
