@@ -274,10 +274,17 @@ def figure_controls():
     rows = [(v["sample_id"], v["role"], n_amr[v["sample_id"]]) for v in val
             if v["role"] != "titration"]
 
-    # The caller-level control has no validation row: it bypasses the assembly gate by
-    # design (it IS an assembly, so assembly checks are meaningless for it). It must
-    # still appear here — a control that is absent from the figure proves nothing.
-    if os.path.exists(os.path.join(RESULTS, "amr", "CALLER_CONTROL.amrfinder.tsv")):
+    # The caller-level control must appear here — a control that is absent from the
+    # figure proves nothing — and early runs gave it no validation row at all, because
+    # it bypasses the assembly gate by design (it IS an assembly, so assembly checks
+    # are meaningless for it). So it was appended from the presence of its call table.
+    # It is gated now and does have a validation row, which made that append a
+    # duplicate: the same control was drawn twice and counted twice, so panel a's title
+    # said "All 3 controls return zero calls" over two controls. Append only what the
+    # summary is missing.
+    have = {r[0] for r in rows}
+    if ("CALLER_CONTROL" not in have
+            and os.path.exists(os.path.join(RESULTS, "amr", "CALLER_CONTROL.amrfinder.tsv"))):
         rows.append(("CALLER_CONTROL", "caller_control", n_amr["CALLER_CONTROL"]))
 
     order = {"test": 0, "clonal_replicate": 1, "cross_species": 2,

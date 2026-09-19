@@ -194,8 +194,25 @@ def control_titles_match_data():
                 w.writerow([sid, role, "Klebsiella pneumoniae", 1, int(n50 * 1e6),
                             int(n50 * 1e6), int(n50 * 1e6), 57.0, depth, 0.99])
 
+        # A real results dir also holds per-sample caller output under amr/, and
+        # figure_controls() reads amr/CALLER_CONTROL.amrfinder.tsv directly: the
+        # caller-level control once had no validation row, so it was appended from
+        # the presence of that file. Without the file this fixture never reached that
+        # branch, which is how "All 3 controls return zero calls" over two controls --
+        # the row appended twice, drawn twice, counted twice -- got past this check
+        # and into a committed figure. Write the file so the branch is exercised.
+        if any(role == "caller_control" for _s, role, _n, _m, _d in samples):
+            os.makedirs(os.path.join(scratch, "amr"), exist_ok=True)
+            with open(os.path.join(scratch, "amr", "CALLER_CONTROL.amrfinder.tsv"),
+                      "w", newline="") as fh:
+                w = _csv.writer(fh, delimiter="\t")
+                w.writerow(["Name", "Element symbol", "Type", "% Identity to reference"])
+
         g = load(results=scratch, figdir=scratch)
         captured = []
+        ytick_labels = []
+        _drawn = {s for s, _r, _n, _m, _d in samples}
+        expected_labels = {s.replace("_", " ") for s in _drawn} | _drawn
         real_savefig = g["plt"].Figure.savefig
 
         def spy(self, *a, **kw):
@@ -204,6 +221,14 @@ def control_titles_match_data():
                     txt = ax.get_title(loc=loc)
                     if txt:
                         captured.append(txt)
+                # Read the drawn rows off the figure being saved. Only panel a puts
+                # samples on its y axis; panel b's is assembly N50 in Mb, whose
+                # repeated numeric ticks are not duplicate samples. Reading every
+                # open figure instead would pick up the figures earlier checks in
+                # this process left open, and report every sample as a duplicate.
+                labs = [t.get_text() for t in ax.get_yticklabels() if t.get_text()]
+                if any(lab in expected_labels for lab in labs):
+                    ytick_labels.extend(labs)
             return real_savefig(self, *a, **kw)
 
         g["plt"].Figure.savefig = spy
@@ -211,6 +236,10 @@ def control_titles_match_data():
             g["figure_controls"]()
         finally:
             g["plt"].Figure.savefig = real_savefig
+
+        dupes = {lab for lab in ytick_labels if ytick_labels.count(lab) > 1}
+        if dupes:
+            failures.append(f"{label}: sample drawn more than once: {sorted(dupes)}")
 
         if not captured:
             failures.append(f"{label}: figure_controls produced no titled axes")

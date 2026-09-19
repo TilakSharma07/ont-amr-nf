@@ -376,6 +376,20 @@ were exactly that until these tests were written:
   a directory with no titration table. The guard is deliberately narrower than "has no
   controls": `--make_decoy false --caller_control false` is a legitimate run, and there
   the missing controls must be visible in the figure rather than hidden by its absence.
+- A comment that used to be true drew the caller-level control twice. It originally had
+  no validation row — it bypasses the assembly gate by design, being an assembly
+  already — so figure 1 appended it from the presence of its call table, with a comment
+  saying exactly that. Giving it a validation row (two entries above) made the comment
+  false and the append a duplicate: the control was drawn twice and counted twice, and
+  panel a announced "All 3 controls return zero calls" over two controls. The figure
+  self-checks passed throughout, because two identical rows overlap no worse than two
+  different ones. It is now appended only if the summary does not already carry it.
+  `control_titles_match_data` could not have caught this: its fixture wrote only the
+  `.tsv` files, so `amr/CALLER_CONTROL.amrfinder.tsv` never existed in the scratch
+  directory and the appending branch was unreachable under test. The fixture now writes
+  that file, and the check reads the sample rows off the figure being saved and
+  requires each sample to appear exactly once. Removing the fixture's `amr/` directory
+  makes the check blind again, which is what makes it worth having.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source
