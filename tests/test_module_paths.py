@@ -161,6 +161,28 @@ def test_ident_arg_empty_at_default():
                  not bad and mentions_guard,
                  f"failures={bad}" if bad else "guard covers null and negative")
 
+def test_readme_params_match_config():
+    """The README's parameter table must agree with nextflow.config.
+
+    The identity-threshold fix changed a default and left the table saying 0.9 --
+    the table is where a reader looks before running anything, so a stale row there
+    is a documented wrong default. Caught by hand once; this makes it mechanical.
+    """
+    cfg = open(os.path.join(ROOT, "nextflow.config")).read()
+    rm = open(os.path.join(ROOT, "README.md")).read()
+    rows = re.findall(r"^\| `--([a-z_0-9]+)` \| ([^|]+?) \|", rm, re.M)
+    assert rows, "no parameter table rows found in README.md"
+    drift = []
+    for name, doc in rows:
+        m = re.search(r"^\s*%s\s*=\s*(\S+)" % re.escape(name), cfg, re.M)
+        actual = m.group(1).strip().strip("'\"") if m else "(absent from config)"
+        d = doc.strip()
+        if d != actual and d.rstrip("0").rstrip(".") != actual.rstrip("0").rstrip("."):
+            drift.append(f"--{name}: README {d!r} vs config {actual!r}")
+    return check("README parameter table agrees with nextflow.config",
+                 not drift, "; ".join(drift) if drift else f"{len(rows)} rows checked")
+
+
 def main():
     print("module shell-safety and caller-threshold checks\n")
     ok = [
@@ -173,6 +195,7 @@ def main():
         test_ident_min_not_passed_at_default(),
         test_ident_min_default_is_curated(),
         test_ident_arg_empty_at_default(),
+        test_readme_params_match_config(),
     ]
     print()
     if all(ok):

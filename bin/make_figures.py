@@ -615,7 +615,110 @@ def figure_titration():
     print("wrote", out)
 
 
+def figure_thresholds():
+    """Which calls the AMRFinderPlus identity threshold governs, and what truncation tracks.
+
+    Both panels read only published tables, so this re-renders on any completed run.
+    Panel a's split is a property of AMRFinderPlus's method labels: --ident_min governs
+    BLAST-derived hits (BLASTX and the PARTIAL/INTERNAL_STOP variants of them); EXACTX,
+    ALLELEX and POINTX are decided by exact match or curated mutation rules instead.
+    """
+    calls = load_tsv("amr_calls.tsv")
+    val = load_tsv("validation_summary.tsv")
+    if not calls or not val:
+        print("no call or validation table; skipping fig4")
+        return
+
+    PARTIAL = {"PARTIALX", "PARTIAL_CONTIGX", "INTERNAL_STOP"}
+    GOVERNED = {"BLASTX"} | PARTIAL
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.1, 2.9))
+
+    # -- panel a: how many calls the identity floor governs ---------------------
+    counts = defaultdict(int)
+    for r in calls:
+        counts[r["method"]] += 1
+    names = sorted(counts, key=lambda m: -counts[m])
+    vals = [counts[m] for m in names]
+    cols = [C_DECOY if m.upper() in GOVERNED else C_GREY for m in names]
+    ax1.barh(range(len(names)), vals, color=cols, height=0.7)
+    ax1.set_yticks(range(len(names)))
+    ax1.set_yticklabels(names)
+    ax1.invert_yaxis()
+    ax1.set_xlabel("calls")
+    for i, v in enumerate(vals):
+        ax1.text(v + max(vals) * 0.015, i, str(v), va="center", fontsize=SMALL)
+    ax1.set_xlim(0, max(vals) * 1.16)
+    n_gov = sum(v for m, v in zip(names, vals) if m.upper() in GOVERNED)
+    ax1.legend(handles=[
+        mpl.patches.Patch(color=C_DECOY, label="identity threshold applies"),
+        mpl.patches.Patch(color=C_GREY, label="exact match / curated rule"),
+    ], loc="lower right", fontsize=SMALL)
+    ax1.set_title("%d of %d calls (%.0f%%) decided by the\nidentity threshold"
+                  % (n_gov, len(calls), 100.0 * n_gov / len(calls)))
+    panel_letter(ax1, "a")
+
+    # -- panel b: truncated calls against depth, sized by contiguity ------------
+    part = defaultdict(int)
+    for r in calls:
+        if r["method"].upper() in PARTIAL:
+            part[r["sample_id"]] += 1
+    pts = [v for v in val
+           if v.get("mean_depth") not in ("NA", "", None)
+           and float(v["mean_depth"]) > 0
+           and v.get("n50") not in ("NA", "", None)]
+    if not pts:
+        print("no depth-bearing rows; skipping fig4 panel b")
+        plt.close(fig)
+        return
+    for v in pts:
+        colour, _, _ = role_style(v["role"])
+        ax2.scatter([float(v["mean_depth"])], [part[v["sample_id"]]], s=42,
+                    color=colour, alpha=0.85, edgecolor="white", linewidth=0.7, zorder=3)
+        ax2.annotate("%s\n%s contigs" % (v["sample_id"], v["n_contigs"]),
+                     (float(v["mean_depth"]), part[v["sample_id"]]),
+                     textcoords="offset points", xytext=(0, 9), ha="center",
+                     fontsize=SMALL, color=C_GREY)
+    ax2.set_xlabel("mean depth (x)")
+    ax2.set_ylabel("truncated calls")
+    ax2.margins(0.22)
+    ax2.set_ylim(bottom=-0.9)
+    # Derive the claim from the points actually plotted. The contiguity result is a
+    # direct comparison and always safe to state; the depth ordering is only asserted
+    # if it actually holds, and only over samples that share a reference gene set --
+    # across species the call sets are not comparable. Titles that assert a trend the
+    # points do not show are the failure mode this figure set has already had twice.
+    most_frag = max(pts, key=lambda v: int(v["n_contigs"]))
+    least_frag = min(pts, key=lambda v: int(v["n_contigs"]))
+    head = ("contiguity does not explain truncation\n"
+            "%s contigs \u2192 %d call(s), %s contigs \u2192 %d"
+            % (most_frag["n_contigs"], part[most_frag["sample_id"]],
+               least_frag["n_contigs"], part[least_frag["sample_id"]]))
+
+    by_sp = defaultdict(list)
+    for v in pts:
+        by_sp[v["sample_id"].split("_")[0]].append(v)
+    biggest = max(by_sp.values(), key=len)
+    ordered = sorted(biggest, key=lambda v: float(v["mean_depth"]))
+    counts_by_depth = [part[v["sample_id"]] for v in ordered]
+    monotonic = (len(ordered) >= 3
+                 and all(counts_by_depth[i] >= counts_by_depth[i + 1]
+                         for i in range(len(counts_by_depth) - 1)))
+    tail = ("monotonic with depth within %s (n=%d)"
+            % (ordered[0]["sample_id"].split("_")[0], len(ordered))
+            if monotonic else "no consistent depth ordering in these samples")
+    ax2.set_title(head + "\n" + tail)
+    panel_letter(ax2, "b")
+
+    out = os.path.join(FIGDIR, "fig4_caller_thresholds.png")
+    fig.savefig(out)
+    verify(fig, "fig4")
+    plt.close(fig)
+    print("wrote", out)
+
+
 if __name__ == "__main__":
     figure_controls()
     figure_profile()
     figure_titration()
+    figure_thresholds()

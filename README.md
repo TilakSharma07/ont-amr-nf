@@ -123,7 +123,7 @@ is the reason it is not the default.
 | `--min_read_q` | 10 | read quality floor |
 | `--min_depth_x` | 20 | depth below which AMR *absence* is not reported |
 | `--min_n50` | 50000 | assembly N50 floor for an interpretable result |
-| `--amr_min_ident` | 0.9 | AMRFinderPlus identity floor |
+| `--amr_min_ident` | -1 | identity floor; `-1` keeps AMRFinderPlus's curated per-gene thresholds (see *Scope and limits*) |
 | `--amr_min_cov` | 0.5 | AMRFinderPlus reference-coverage floor |
 | `--make_decoy` | true | read-level control: shuffled reads through the full path |
 | `--caller_control` | true | caller-level control: shuffled assembly, re-called |
@@ -490,6 +490,14 @@ testing anything looks exactly like a suite that passes.
 - **Resistance genotype is not resistance phenotype.** A detected determinant is not an
   MIC. Expected phenotypes in the provenance doc come from the originating studies and
   are used here as positive-control priors, not as validated susceptibility results.
+![caller thresholds and truncation](docs/figures/fig4_caller_thresholds.png)
+
+*Figure 4 — (a) which calls the identity threshold decides: BLAST-derived hits, including
+their PARTIAL and INTERNAL_STOP variants, versus calls settled by exact match or a curated
+mutation rule. (b) truncated calls against measured depth. Both panels derive their titles
+from the plotted rows: panel b asserts a depth ordering only when the points show one, and
+says so otherwise. Rendered by `bin/make_figures.py` from the published tables.*
+
 - **Assemblies are not polished.** Reads go filter → flye → caller with no medaka or
   racon step. Flye's own two iterations are the only correction applied. The cost is
   visible in the published calls: 12 of 188 are `PARTIALX` or `INTERNAL_STOP`, which is

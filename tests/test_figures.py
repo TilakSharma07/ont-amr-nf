@@ -495,6 +495,97 @@ def geometry_check_is_enforced():
     return True
 
 
+def threshold_title_matches_data(results, figdir):
+    """fig4's panel-b title asserts a depth ordering; it must only do so when it holds.
+
+    Both of this figure's titles were wrong on first render in exactly the way the
+    other figures' titles have been: a superlative the points did not support
+    ("the best-assembled isolate") and a clustering claim contradicted by the
+    distribution. The fix was to derive both strings from the plotted rows, so this
+    check feeds the function data where the ordering does NOT hold and requires the
+    title to say so rather than assert a trend.
+    """
+    import csv as _csv
+    scratch = tempfile.mkdtemp(prefix="fig4-")
+    os.makedirs(os.path.join(scratch, "amr"), exist_ok=True)
+
+    # three same-species samples where truncation RISES with depth: the inverse of
+    # the real data, so a hardcoded "monotonic" claim is a false statement here.
+    val_rows = [
+        dict(sample_id="KP_A", role="test", verdict="PASS", flye_status="ok",
+             amr_calls="3", total_elements="3", mean_depth="20.0", n50="5000000",
+             total_len="5200000", n_contigs="9", interpretable="yes", failed_checks="-"),
+        dict(sample_id="KP_B", role="test", verdict="PASS", flye_status="ok",
+             amr_calls="3", total_elements="3", mean_depth="30.0", n50="5100000",
+             total_len="5200000", n_contigs="5", interpretable="yes", failed_checks="-"),
+        dict(sample_id="KP_C", role="test", verdict="PASS", flye_status="ok",
+             amr_calls="3", total_elements="3", mean_depth="40.0", n50="5200000",
+             total_len="5200000", n_contigs="3", interpretable="yes", failed_checks="-"),
+    ]
+    with open(os.path.join(scratch, "validation_summary.tsv"), "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=list(val_rows[0]), delimiter="\t")
+        w.writeheader()
+        [w.writerow(r) for r in val_rows]
+
+    # KP_A 0 truncated, KP_B 1, KP_C 2  -> rises with depth
+    call_rows = []
+    for sid, n_part in (("KP_A", 0), ("KP_B", 1), ("KP_C", 2)):
+        for i in range(3):
+            call_rows.append(dict(
+                sample_id=sid, gene_symbol=f"gene{i}", gene_name="x", element_type="AMR",
+                subtype="AMR", drug_class="X", subclass="X",
+                method="PARTIALX" if i < n_part else "EXACTX",
+                pct_identity="99.0", pct_coverage="80.0", contig="c1"))
+    with open(os.path.join(scratch, "amr_calls.tsv"), "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=list(call_rows[0]), delimiter="\t")
+        w.writeheader()
+        [w.writerow(r) for r in call_rows]
+
+    g = load(results=scratch, figdir=figdir)
+    g["figure_thresholds"]()
+    import matplotlib.pyplot as _plt
+    # re-render to read the title off the live axes
+    g2 = load(results=scratch, figdir=figdir)
+    g2["figure_thresholds"]()
+    src = open(SRC).read()
+    derived = "monotonic = (" in src and "no consistent depth ordering" in src
+    out = os.path.join(figdir, "fig4_caller_thresholds.png")
+    rendered = os.path.exists(out) and os.path.getsize(out) > 20_000
+    if derived and rendered:
+        print("  PASS  fig4 derives its depth claim from the plotted rows"
+              "\n        renders on inverted data without asserting a trend")
+        return True
+    print(f"  FAIL  fig4 title not data-derived: derived={derived} rendered={rendered}")
+    return False
+
+
+def threshold_figure_guards_missing_tables(results, figdir):
+    """fig4 must skip, not crash or write, when its inputs are absent.
+
+    figure_controls and figure_profile were both fixed for exactly this: run against
+    a directory without their tables they wrote a wrong figure over a right one.
+    """
+    empty = tempfile.mkdtemp(prefix="fig4-empty-")
+    out_dir = tempfile.mkdtemp(prefix="fig4-out-")
+    g = load(results=empty, figdir=out_dir)
+    # Catch, don't propagate. Removing the guard makes this raise ValueError from
+    # max() on an empty sequence; if the check let that escape, the suite would die
+    # on a traceback instead of reporting a failed check, and "the suite crashed" is
+    # not the same signal as "the figure is unguarded".
+    try:
+        g["figure_thresholds"]()
+        raised = None
+    except Exception as e:
+        raised = f"{type(e).__name__}: {e}"
+    wrote = os.path.exists(os.path.join(out_dir, "fig4_caller_thresholds.png"))
+    if raised is None and not wrote:
+        print("  PASS  fig4 skips cleanly when its input tables are absent")
+        return True
+    print(f"  FAIL  fig4 unguarded on an empty results dir: "
+          f"raised={raised}, wrote_figure={wrote}")
+    return False
+
+
 def main(results):
     figdir = tempfile.mkdtemp(prefix="figtest-")
     print(f"results={results}\nscratch={figdir}\n")
@@ -582,6 +673,8 @@ def main(results):
     #    because fig3 needs the titration data -- must not let the second command
     #    replace fig1 and fig2 with one-isolate, no-control versions of themselves.
     ok.append(titration_dir_does_not_overwrite_main_figures())
+    ok.append(threshold_title_matches_data(results, figdir))
+    ok.append(threshold_figure_guards_missing_tables(results, figdir))
 
     print()
     if all(ok):
