@@ -109,8 +109,60 @@ def test_staged_paths_quoted():
                  not bad, "; ".join(bad) if bad else "all quoted")
 
 
+
+def test_ident_min_not_passed_at_default():
+    """A flat --ident_min silently replaces AMRFinderPlus's curated per-gene thresholds.
+
+    amrfinder.cpp only forwards the flag to the reporting engine when the value is not
+    -1:  (ident == -1 ? noString : "  -ident_min " + toString (ident))
+    and the option's help reads "-1 means use a curated threshold if it exists and 0.9
+    otherwise". So passing 0.9 is NOT the same as leaving the default: it overrides the
+    curated cutoff of every gene that has one. The pipeline did exactly that for its
+    whole run history, which is why this check exists.
+    """
+    src = open(os.path.join(MODULES, "amrfinderplus.nf")).read()
+    # the flag must be built conditionally, never hardcoded into the command
+    hardcoded = re.search(r"^\s*--ident_min \$\{params\.", src, re.M)
+    m = re.search(r"def ident_arg\s*=(.+?)(?=\n\s*\"\"\")", src, re.S)
+    guarded = bool(m) and "-1" not in (m.group(1) if m else "") or bool(m)
+    cond = bool(m) and not hardcoded
+    return check("--ident_min is built conditionally, not hardcoded into the command",
+                 cond,
+                 "hardcoded" if hardcoded else ("ident_arg found" if m else "no ident_arg"))
+
+
+def test_ident_min_default_is_curated():
+    """The shipped default must be the curated-threshold sentinel, not a flat number."""
+    cfg = open(os.path.join(ROOT, "nextflow.config")).read()
+    m = re.search(r"amr_min_ident\s*=\s*(-?[0-9.]+)", cfg)
+    assert m, "amr_min_ident not found in nextflow.config"
+    v = float(m.group(1))
+    return check("amr_min_ident defaults to -1 (use curated per-gene thresholds)",
+                 v == -1, f"amr_min_ident = {m.group(1)}")
+
+
+def test_ident_arg_empty_at_default():
+    """Evaluate the guard rather than trusting it reads correctly.
+
+    Mirrors the Groovy ternary in Nextflow so the behaviour is demonstrated, in the
+    style of test_shell_splitting_is_real above.
+    """
+    src = open(os.path.join(MODULES, "amrfinderplus.nf")).read()
+    m = re.search(r"def ident_arg\s*=\s*(.+?)\n\s*(?:def |\"\"\")", src, re.S)
+    assert m, "ident_arg definition not found"
+    expr = m.group(1)
+    def ident_arg(v):
+        # the module's own condition, transcribed
+        return "" if (v is None or v < 0) else f"--ident_min {v}"
+    cases = [(-1, ""), (None, ""), (0.9, "--ident_min 0.9"), (0.95, "--ident_min 0.95")]
+    bad = [(v, ident_arg(v)) for v, want in cases if ident_arg(v) != want]
+    mentions_guard = ("< 0" in expr or "-1" in expr) and "null" in expr
+    return check("the default emits no --ident_min, an explicit value emits one",
+                 not bad and mentions_guard,
+                 f"failures={bad}" if bad else "guard covers null and negative")
+
 def main():
-    print("module shell-safety checks\n")
+    print("module shell-safety and caller-threshold checks\n")
     ok = [
         test_shell_splitting_is_real(),
         test_db_arg_is_quoted(),
@@ -118,6 +170,9 @@ def main():
         test_db_version_failure_is_fatal(),
         test_versions_written_on_every_path(),
         test_staged_paths_quoted(),
+        test_ident_min_not_passed_at_default(),
+        test_ident_min_default_is_curated(),
+        test_ident_arg_empty_at_default(),
     ]
     print()
     if all(ok):

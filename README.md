@@ -409,6 +409,29 @@ were exactly that until these tests were written:
   pins both headline numbers as well as the per-sample column — including a check that
   the old label does not come back. Reviewing one number in a file is not reviewing the
   file; the header is where a reader's eye lands first, and it was the wrong number.
+- The caller ran with its curated identity thresholds switched off, for the whole run
+  history, because the config set `amr_min_ident = 0.9` — which looks like the tool's
+  own default and is not the same thing. AMRFinderPlus documents `-1` as "use a curated
+  threshold if it exists and 0.9 otherwise", and `amrfinder.cpp` forwards the flag to
+  the reporting engine only when the value is not `-1`:
+  `(ident == -1 ? noString : "  -ident_min " + toString (ident))`. So passing `0.9`
+  does not restate the default — it replaces every gene's curated cutoff with one flat
+  number across the database. Those per-gene cutoffs are what separate closely-related
+  alleles, and 74 of the 188 published calls (39%) are BLAST- or PARTIAL-method hits
+  governed by this threshold, among them `blaOXA`, `tet(A)`, `sul2`, `mph(A)` and
+  `erm(B)`. I first read the one bare `blaOXA` call as evidence of the loosened
+  threshold, and it is not: the same run resolves `blaOXA-48`, `blaOXA-1` and
+  `blaOXA-9` by exact allele match, and the bare call is `INTERNAL_STOP` at 61.23%
+  coverage — a truncated gene, which is the separate assembly-error finding below.
+  The verification step that pins the numbers in this paragraph is what caught that,
+  which is the argument for pinning them. Nothing in the run announced the threshold:
+  the flat threshold is more permissive than most curated ones, so it costs calls
+  nowhere and only loosens allele-level precision. `--ident_min` is now emitted only
+  when the user asks for a non-default floor, the shipped default is `-1`, and three
+  checks in `test_module_paths.py` cover the flag construction, the config default and
+  the guard's behaviour. Restoring the hardcoded flag fails the first; restoring `0.9`
+  fails the second. The published results in `example_results/` predate this fix and
+  were produced with the flat threshold.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source
@@ -467,6 +490,25 @@ testing anything looks exactly like a suite that passes.
 - **Resistance genotype is not resistance phenotype.** A detected determinant is not an
   MIC. Expected phenotypes in the provenance doc come from the originating studies and
   are used here as positive-control priors, not as validated susceptibility results.
+- **Assemblies are not polished.** Reads go filter → flye → caller with no medaka or
+  racon step. Flye's own two iterations are the only correction applied. The cost is
+  visible in the published calls: 12 of 188 are `PARTIALX` or `INTERNAL_STOP`, which is
+  how a residual indel looks to a protein-level caller — a frameshift, then a truncated
+  or prematurely stopped alignment. It is not an assembly-contiguity problem, which was
+  the first thing I checked: `KP_ES_7983` has the *best* contiguity in the run (3
+  contigs, 5.31 Mb N50) and the most truncated calls (8). Within Klebsiella the count
+  tracks depth rather than contiguity — 8 at 26.1x, 1 at 29.9x, 0 at 36.5x. Adding a
+  polishing step is the single highest-value change to the calling path; it is not here
+  because medaka's models are basecaller- and chemistry-specific, and pinning one
+  correctly matters more than adding one quickly.
+- **`recovery_fraction` counts a truncated gene as recovered.** It compares gene symbols,
+  so a `PARTIALX` hit at 61% reference coverage scores the same as a full-length exact
+  match. Recomputing it over intact calls only moves the two low-depth rows — 0.75 → 0.74
+  at 10x and 0.70 → 0.63 at 5x — because at 5x `aph(6)-Id` and `dfrA14` are recovered
+  only as fragments while both are intact at full depth. The published metric is the
+  looser of the two, and it is reported as-is rather than silently tightened, because
+  the titration's question is "is the determinant still detectable", not "is it intact".
+  Read it as detection, not as reconstruction.
 - **Not a diagnostic device.** This is a reproducible research pipeline. Clinical use
   requires validation, accreditation and controls far beyond its scope.
 

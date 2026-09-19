@@ -28,6 +28,18 @@ process AMRFINDERPLUS {
     // amrfinder rejects the fragment as a positional parameter. This is invisible on
     // a developer machine whose paths happen to have no spaces.
     def db_arg  = params.amrfinder_db ? "--database '${params.amrfinder_db}'" : ""
+    // --ident_min is only passed when the user asks for a non-default floor. This is not
+    // cosmetic. In amrfinder.cpp the flag reaches the reporting engine only when the
+    // value is not -1:
+    //     (ident == -1 ? noString : "  -ident_min " + toString (ident))
+    // and the option's own help reads "-1 means use a curated threshold if it exists and
+    // 0.9 otherwise". So ANY explicit value -- 0.9 included -- replaces the per-gene
+    // curated cutoffs with one flat number for every reference in the database. Those
+    // cutoffs are what separate closely-related alleles in families like blaOXA, tet and
+    // qnr, where a few percent of identity is the difference between two enzymes with
+    // different substrate spectra. Passing 0.9 looks like "keep the default" and is not.
+    def ident_arg = (params.amr_min_ident == null || params.amr_min_ident < 0)
+                    ? "" : "--ident_min ${params.amr_min_ident}"
     """
     # Resolve the database version FIRST, so it is recorded on every path through this
     # process — including the empty-assembly path below. It must be queried WITH
@@ -67,7 +79,7 @@ process AMRFINDERPLUS {
         --nucleotide "${assembly}" \\
         ${org_arg} \\
         ${db_arg} \\
-        --ident_min ${params.amr_min_ident} \\
+        ${ident_arg} \\
         --coverage_min ${params.amr_min_cov} \\
         --threads ${task.cpus} \\
         --name ${meta.id} \\
