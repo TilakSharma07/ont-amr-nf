@@ -390,6 +390,15 @@ were exactly that until these tests were written:
   that file, and the check reads the sample rows off the figure being saved and
   requires each sample to appear exactly once. Removing the fixture's `amr/` directory
   makes the check blind again, which is what makes it worth having.
+- Two of the published numbers are genuinely different quantities with near-identical
+  names, and I misread my own output because of it. `run_summary.md`'s "AMR genes"
+  counts distinct gene symbols; `validation_summary.tsv`'s `amr_calls` counts called
+  rows; figure 1's axis says "elements called". They diverge whenever one gene is
+  called on two contigs — `EC_PE_M09449` is 26 symbols and 29 rows — so all three are
+  right and none of them is a defect. Nothing was broken here, but the consistency
+  check had pinned only two of the three files, leaving the loosest one free to drift
+  into the other's definition. It now checks each number against its own definition,
+  and swapping the row count in for the symbol count fails it.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source

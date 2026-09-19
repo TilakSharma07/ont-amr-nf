@@ -307,13 +307,48 @@ def check_published_counts_agree(results):
         if str(got_all) not in ("NA", "") and str(got_all) != str(exp_all):
             bad.append(f"{s}: total_elements={got_all}, call table has {exp_all} rows")
 
+    # run_summary.md is the third file in the disagreement this check exists for, and
+    # pinning only two of the three leaves the loosest one unpinned. Its "AMR genes"
+    # column is deliberately NOT the same quantity as amr_calls: it counts distinct
+    # gene symbols, while amr_calls counts called rows, and they differ whenever one
+    # gene is called on two contigs (EC_PE_M09449: 26 symbols, 29 rows). Both numbers
+    # are correct and neither may be quietly changed into the other -- so check each
+    # against its own definition rather than against the other.
+    run_summary = _os.path.join(results, "run_summary.md")
+    checked_md = 0
+    if _os.path.exists(run_summary):
+        per_sym = {}
+        for r in rows:
+            if etype(r) == "AMR":
+                per_sym.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
+        import re as _re
+        with open(run_summary) as fh:
+            for line in fh:
+                if not line.lstrip().startswith("|"):
+                    continue
+                cells = [c.strip().strip("`*") for c in line.strip().strip("|").split("|")]
+                if len(cells) < 6 or cells[0] in ("Sample", "---"):
+                    continue
+                s, got = cells[0], cells[-1]
+                if s not in per_sym and s not in per_amr and not any(
+                        v["sample_id"] == s for v in vrows):
+                    continue
+                exp_sym = len(per_sym.get(s, ()))
+                if got.isdigit():
+                    checked_md += 1
+                    if int(got) != exp_sym:
+                        bad.append(f"{s}: run_summary.md AMR genes={got}, call table "
+                                   f"has {exp_sym} distinct AMR symbols")
+
     if bad:
         print(f"  FAIL  {label}")
         for b in bad[:8]:
             print(f"        {b}")
         return False
     print(f"  PASS  {label}")
-    print(f"        {len(vrows)} samples reconcile against {len(rows)} call rows")
+    print(f"        {len(vrows)} samples reconcile against {len(rows)} call rows"
+          + (f"; {checked_md} run_summary.md rows agree on distinct symbols"
+             if checked_md else ""))
     return True
 
 
