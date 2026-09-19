@@ -1,11 +1,18 @@
 # Pushing this repo to GitHub
 
-The repo is committed and clean: 15 commits on `main`, nothing uncommitted. GitHub is
-unreachable from the sandbox this was built in, so these commands run on your machine,
-under your own credentials. Nothing was pushed for you.
+The repo is committed and clean, on `main`, nothing uncommitted. GitHub is unreachable
+from the sandbox this was built in, so these commands run on your machine, under your
+own credentials. Nothing was pushed for you.
 
-Rather than trust the counts below, run the two commands in section 3 — they print the
-current numbers. Every count in this file was stale once already.
+```bash
+cd ~/Downloads/ont-amr-nf && git rev-list --count HEAD && git status --short
+```
+
+This file used to state the commit count. It was wrong by six, I corrected it, and the
+correcting commit made it wrong again — twice, because fixing that made it wrong a
+third time. A number that changes every time you touch the file cannot be maintained by
+hand, so it is a command now. The same goes for the check counts in section 3: they are
+there to tell you roughly what to expect, not to be trusted over the runner's output.
 
 ## Already done for you
 
