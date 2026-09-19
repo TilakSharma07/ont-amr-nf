@@ -303,17 +303,28 @@ passed the assembly-quality checks would be the alarming outcome.
 ## Tests
 
 ```bash
+python3 tests/run_all.py results/     # every suite, one summary
+```
+
+Or individually:
+
+```bash
 python3 tests/test_validation_gate.py results/
 python3 tests/test_control_gate.py results/
 python3 tests/test_figures.py results/
-python3 tests/test_samplesheet.py          # needs nextflow on PATH
+python3 tests/test_aggregate.py
+python3 tests/test_samplesheet.py          # needs a working nextflow
 python3 tests/test_module_paths.py
 ```
+
+`run_all.py` refuses an empty or wrong results directory rather than reporting success
+over nothing, reports which suites skipped and why, and warns if a suite exists on disk
+but is not in its list — a new suite that nobody runs is not a test.
 
 The suites are **mutation tests**: each one breaks something in a specific, plausible way
 and asserts that the code refuses to produce output. This is deliberate. The gates and the
 figure script carry self-checks, and a self-check that cannot fail is worse than no check
-at all — it reads as evidence while proving nothing. Three of the checks in this repository
+at all — it reads as evidence while proving nothing. Several checks in this repository
 were exactly that until these tests were written:
 
 - The gate's `positive_expectation_met` counted every element AMRFinderPlus returned, so
@@ -322,6 +333,15 @@ were exactly that until these tests were written:
 - The figure script's leader-line check asserted that each label's leader ended on *a*
   marker rather than on *its own* marker. Every possible mis-pairing of labels to points
   passes that check, including one that labels every isolate with its neighbour's name.
+- The figure script's geometry check — no overlapping text, nothing off the canvas —
+  printed its findings and returned. It detected a real violation in figure 3 and the
+  script still wrote the figure and exited 0, so the run read as clean. It now raises.
+  Switching it on immediately surfaced three further defects it had been hiding: it was
+  counting tick labels outside the axis view interval, which matplotlib never draws; a
+  hardcoded figure-2 title claimed genes were "shared" on a single-sample panel; and
+  both controls were labelled at the same fixed offset, so a run in which both behaved
+  correctly — identical zero coordinates — stacked the two labels on top of each other.
+  The healthy run was the unreadable one.
 - The caller-level control — the sharpest control here — had no check at all. Its calls
   went straight to the aggregator, and "the control came back empty" was a sentence in
   this README rather than an assertion in the code. Had the shuffle silently stopped
@@ -366,6 +386,16 @@ It now refuses to start unless the tables it needs are present, and the baseline
 figure file was written rather than only that nothing raised — a skipped figure raises
 nothing either. The same shape of bug is worth looking for in any test suite whose subject
 can silently do nothing.
+
+A related failure sits on the other side of the same problem. `test_samplesheet.py` gated
+itself on `shutil.which("nextflow")`, but the `nextflow` command is a launcher script that
+downloads its runtime on first use. On a machine with no route to that download, the
+command is on `PATH` and fails every invocation — so the guard passed, every subsequent
+check found "no complaint emitted", and a missing tool was reported as five defects in the
+samplesheet validation. It now probes by running `nextflow -version` and skips with the
+reason attached. A tool check should ask whether the tool *works*, not whether a file with
+the right name exists, and a skip should always say why: a suite that silently stops
+testing anything looks exactly like a suite that passes.
 
 ## Scope and limits
 

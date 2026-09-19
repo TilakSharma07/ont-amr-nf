@@ -68,9 +68,33 @@ def check(name, cond, detail=""):
     return bool(cond)
 
 
-def main():
+def nextflow_usable():
+    """True only if nextflow can actually launch, not merely if it is on PATH.
+
+    The launcher is a small script that downloads the runtime jar on first use. On a
+    machine with no route to that download it sits on PATH and fails every invocation,
+    so a which() check reported it as available and all five checks below failed with
+    "no complaint emitted" -- a missing tool presented as five defects in the
+    samplesheet validation. Probe by running it.
+    """
     if not shutil.which("nextflow"):
-        print("  SKIP  nextflow not on PATH — samplesheet validation not exercised")
+        return False, "not on PATH"
+    try:
+        r = subprocess.run(["nextflow", "-version"], capture_output=True,
+                           text=True, timeout=120)
+    except (subprocess.TimeoutExpired, OSError) as e:
+        return False, f"cannot launch ({type(e).__name__})"
+    if r.returncode != 0:
+        first = next((l.strip() for l in ((r.stderr or "") + (r.stdout or "")).splitlines()
+                      if l.strip()), "")
+        return False, f"cannot launch: {first[:80]}"
+    return True, ""
+
+
+def main():
+    usable, why = nextflow_usable()
+    if not usable:
+        print(f"  SKIP  nextflow {why} — samplesheet validation not exercised")
         return 0
 
     fields, rows = load_sheet()
