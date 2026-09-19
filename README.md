@@ -495,9 +495,11 @@ testing anything looks exactly like a suite that passes.
   visible in the published calls: 12 of 188 are `PARTIALX` or `INTERNAL_STOP`, which is
   how a residual indel looks to a protein-level caller — a frameshift, then a truncated
   or prematurely stopped alignment. It is not an assembly-contiguity problem, which was
-  the first thing I checked: `KP_ES_7983` has the *best* contiguity in the run (3
-  contigs, 5.31 Mb N50) and the most truncated calls (8). Within Klebsiella the count
-  tracks depth rather than contiguity — 8 at 26.1x, 1 at 29.9x, 0 at 36.5x. Adding a
+  the first thing I checked, and the ranking runs the wrong way: `KP_ES_7636` is the
+  most fragmented isolate (11 contigs) and carries 1 truncated call, while `KP_ES_7983`
+  is the least fragmented (3 contigs) and carries 8. Within Klebsiella the count tracks
+  depth instead — 8 at 26.1x, 1 at 29.9x, 0 at 36.5x. (`KP_BG_81` holds the highest N50
+  at 5.44 Mb; `KP_ES_7983` has the fewest contigs but not the longest.) Adding a
   polishing step is the single highest-value change to the calling path; it is not here
   because medaka's models are basecaller- and chemistry-specific, and pinning one
   correctly matters more than adding one quickly.
