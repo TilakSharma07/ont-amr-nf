@@ -23,21 +23,37 @@ under your own credentials. Nothing was pushed for you.
 - **`example_results/` committed** (188 KB). This is what makes the repo reviewable
   without installing anything — see below.
 
-## 1. Create the empty repo
+## 1. Create the repo on GitHub — it does not exist yet
 
-On GitHub, **New repository** → name `ont-amr-nf` → **Public** → do *not* add a README,
-.gitignore or licence (the repo already has them; an initialising commit would force you
-to merge).
+`git push` does **not** create a repository. If you push before creating it you get:
 
-Suggested description:
+```
+remote: Repository not found.
+fatal: repository 'https://github.com/TilakSharma07/ont-amr-nf.git/' not found
+```
 
-> Nextflow ONT AMR calling pipeline with two control layers and mutation-tested gates
+That is what "not found" means here — not a permissions problem, not a typo in the URL.
+The remote is already configured in this clone, so **do not run `git remote add` again**
+(it will say `remote origin already exists`).
 
-## 2. Push
+**Easiest — `gh` is already installed (v2.45):**
 
 ```bash
 cd ~/Downloads/ont-amr-nf
-git remote add origin https://github.com/TilakSharma07/ont-amr-nf.git
+gh auth login          # once, if you have never used gh here: choose GitHub.com → HTTPS → browser
+gh repo create ont-amr-nf --public --source=. --remote=origin --push \
+  --description "Nextflow ONT AMR calling pipeline with two control layers and mutation-tested gates"
+```
+
+That creates it and pushes in one step. `--source=.` reuses the remote already set, so
+nothing is duplicated.
+
+**Or by hand:** on GitHub click **+** → **New repository** → name `ont-amr-nf` →
+**Public** → add **no** README, .gitignore or licence (this repo already has them; an
+initialising commit would force you to merge). Then:
+
+```bash
+cd ~/Downloads/ont-amr-nf
 git push -u origin main
 ```
 
