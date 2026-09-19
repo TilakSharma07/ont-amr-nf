@@ -33,44 +33,54 @@ there to tell you roughly what to expect, not to be trusted over the runner's ou
 - **`example_results/` committed** (188 KB). This is what makes the repo reviewable
   without installing anything — see below.
 
-## 1. Create the repo on GitHub — it does not exist yet
+## 1. Push
 
-`git push` does **not** create a repository. If you push before creating it you get:
-
-```
-remote: Repository not found.
-fatal: repository 'https://github.com/TilakSharma07/ont-amr-nf.git/' not found
-```
-
-That is what "not found" means here — not a permissions problem, not a typo in the URL.
-The remote is already configured in this clone, so **do not run `git remote add` again**
-(it will say `remote origin already exists`).
-
-**Easiest — `gh` is already installed (v2.45):**
-
-```bash
-cd ~/Downloads/ont-amr-nf
-gh auth login          # once, if you have never used gh here: choose GitHub.com → HTTPS → browser
-gh repo create ont-amr-nf --public --source=. --remote=origin --push \
-  --description "Nextflow ONT AMR calling pipeline with two control layers and mutation-tested gates"
-```
-
-That creates it and pushes in one step. `--source=.` reuses the remote already set, so
-nothing is duplicated.
-
-**Or by hand:** on GitHub click **+** → **New repository** → name `ont-amr-nf` →
-**Public** → add **no** README, .gitignore or licence (this repo already has them; an
-initialising commit would force you to merge). Then:
+The repo exists on GitHub and `origin` in this clone already points at it. Nothing to
+create, nothing to add:
 
 ```bash
 cd ~/Downloads/ont-amr-nf
 git push -u origin main
 ```
 
-If it asks for a password, use a personal access token, not your account password
-(<https://github.com/settings/tokens> → classic → scope `repo`).
+If it asks for a username and password, `git` has no credentials for github.com yet.
+`gh` does, so hand them over once and retry:
 
-## 3. Verify it is reviewable without tools
+```bash
+gh auth setup-git
+git push -u origin main
+```
+
+Your GitHub web password will not work even if you type it correctly — it has not been
+accepted for git over HTTPS for years. `gh auth setup-git` is the fix; a personal
+access token used as the password also works
+(<https://github.com/settings/tokens> -> classic -> scope `repo`).
+
+Then verify the push landed, rather than trusting that the command printed nothing
+alarming:
+
+```bash
+git log --oneline -1 origin/main    # must match: git log --oneline -1
+```
+
+### Why `gh repo create` left you with an empty repo
+
+`gh repo create ont-amr-nf --public --source=. --remote=origin --push` creates and
+pushes in one step, **but only in a clone that has no `origin` yet.** This clone has
+one, so `--remote=origin` fails with `Unable to add remote "origin"`, and because that
+step failed `--push` never ran. The output reports a success and a failure together and
+leaves an empty repository on GitHub. An earlier version of this file recommended that
+command and claimed `--source=.` would reuse the existing remote. It does not.
+
+If that has already happened you are exactly where section 1 starts: just push. Do not
+run the `git remote add origin ...` line GitHub shows on the empty-repo page either --
+it will say `remote origin already exists`. Check before adding:
+
+```bash
+git remote -v
+```
+
+## 2. Verify it is reviewable without tools
 
 This is the point of `example_results/`. On a fresh clone, with no conda env, no
 Nextflow, and no AMRFinderPlus installed:
