@@ -195,6 +195,12 @@ zero elements of any class. Its assembly-quality fields are published as `NA` ra
 `0`, since `0` would read as a measurement. `n/a` in the depth column above means the same
 thing.
 
+![controls and quality](docs/figures/fig1_controls_and_quality.png)
+
+*Figure 1 — assembly quality and control behaviour across the run. Controls carry their own
+hue throughout every figure: the read-level decoy and the caller-level control are never
+styled as isolates. Rendered by `bin/make_figures.py`.*
+
 **"AMR genes" means resistance determinants only.** AMRFinderPlus returns three classes
 of element in one table — `AMR` (acquired and mutational resistance determinants),
 `STRESS` (biocide, metal and heat tolerance) and `VIRULENCE` — and counting all of them
@@ -207,13 +213,19 @@ the strength of its metal-tolerance genes. The negative-control check runs the o
 and requires zero elements of *any* class — a control must return nothing at all, not
 merely nothing under one label.
 
-### The three things this run actually demonstrates
+### The four things this run actually demonstrates
 
 **1. Clonal concordance — 1.0000.** `KP_ES_7636` and `KP_ES_7983` are two isolates of the
 same ST5994 outbreak clone, sequenced separately and assembled independently here. They
 returned **identical** determinant sets: 20 genes each, 20 shared, zero discordant
 (Jaccard = 1.0000). Nothing in the pipeline enforces this — the two samples never meet.
 It is the closest thing available to a reproducibility measurement on real data.
+
+![determinant profile](docs/figures/fig2_determinant_profile.png)
+
+*Figure 2 — resistance determinants by isolate. 52 distinct genes across the four isolates;
+exactly one (`parC_S80I`) is shared by all four. The title is computed from the plotted
+rows, not written by hand.*
 
 **2. Expected phenotypes recovered, including co-production.** Each source study describes
 its isolates independently of this pipeline, which makes those descriptions *a priori*
@@ -244,6 +256,11 @@ contigs       11          11
 total_bp      5,887,566   5,887,566
 gc_fraction   0.569597    0.569597
 ```
+
+![depth titration](docs/figures/fig3_depth_titration.png)
+
+*Figure 3 — depth titration. Recovery against subsampled depth, which is where the 20x
+floor comes from: it is read off this curve rather than taken from a guideline.*
 
 **4. The 20x depth floor is measured, not asserted.** The gate refuses to report absence
 below 20x, and that threshold would be an arbitrary number if nothing tested it.

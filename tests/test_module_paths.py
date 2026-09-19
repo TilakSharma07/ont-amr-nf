@@ -183,6 +183,28 @@ def test_readme_params_match_config():
                  not drift, "; ".join(drift) if drift else f"{len(rows)} rows checked")
 
 
+def test_readme_figures_resolve():
+    """Every image the README embeds must exist, and every shipped figure must be shown.
+
+    A broken image is the most visible defect a README can have -- GitHub renders it as
+    a torn icon. The reverse case is quieter and was the real one here: fig1-fig3 sat in
+    docs/figures referenced by nothing, so a reader saw only fig4, which appears under
+    *Scope and limits*. The repository's evidence was invisible and its caveat was not.
+    """
+    rm = open(os.path.join(ROOT, "README.md")).read()
+    refs = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", rm)
+    figdir = os.path.join(ROOT, "docs", "figures")
+    shipped = sorted(f for f in os.listdir(figdir)) if os.path.isdir(figdir) else []
+    missing = [r for r in refs if not os.path.exists(os.path.join(ROOT, r))]
+    unref = [f for f in shipped if not any(f in r for r in refs)]
+    problems = ([f"broken link: {m}" for m in missing]
+                + [f"shipped but never shown: {u}" for u in unref])
+    return check("README images resolve and every shipped figure is shown",
+                 not problems,
+                 "; ".join(problems) if problems
+                 else f"{len(refs)} embeds, {len(shipped)} figures, all matched")
+
+
 def main():
     print("module shell-safety and caller-threshold checks\n")
     ok = [
@@ -196,6 +218,7 @@ def main():
         test_ident_min_default_is_curated(),
         test_ident_arg_empty_at_default(),
         test_readme_params_match_config(),
+        test_readme_figures_resolve(),
     ]
     print()
     if all(ok):
