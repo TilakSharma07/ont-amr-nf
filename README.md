@@ -303,8 +303,14 @@ passed the assembly-quality checks would be the alarming outcome.
 ## Tests
 
 ```bash
-python3 tests/run_all.py results/     # every suite, one summary
+python3 tests/run_all.py example_results/results_main     # every suite, one summary
 ```
+
+`example_results/` is the output of the two runs described below — the summary tables,
+per-sample AMRFinderPlus calls and per-sample verdicts, 188 KB in total. It is committed
+on purpose: the tests check the gates and the figure script against real published output,
+so cloning the repository is enough to run all 36 checks and re-render all three figures
+without installing a single tool. Assemblies and alignments are not shipped.
 
 Or individually:
 

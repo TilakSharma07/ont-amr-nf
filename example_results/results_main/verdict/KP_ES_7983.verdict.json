@@ -1,0 +1,50 @@
+{
+  "sample_id": "KP_ES_7983",
+  "role": "clonal_replicate",
+  "verdict": "PASS",
+  "flye_status": "assembled",
+  "amr_calls": 43,
+  "mean_depth": 26.1,
+  "n50": 5310109,
+  "total_len": 5617970,
+  "n_contigs": 3,
+  "breadth_1x": 1.0,
+  "amr_result_interpretable": true,
+  "checks": [
+    {
+      "check": "assembly_produced",
+      "status": "PASS",
+      "detail": "flye status: assembled (exit 0)"
+    },
+    {
+      "check": "depth",
+      "status": "PASS",
+      "detail": "mean realised depth 26.1x (floor 20x)"
+    },
+    {
+      "check": "n50",
+      "status": "PASS",
+      "detail": "N50 5,310,109 bp (floor 50,000 bp)"
+    },
+    {
+      "check": "genome_size",
+      "status": "PASS",
+      "detail": "assembly 5,617,970 bp (expected 4,000,000-7,000,000)"
+    },
+    {
+      "check": "fragmentation",
+      "status": "PASS",
+      "detail": "3 contigs (ceiling 200)"
+    },
+    {
+      "check": "breadth",
+      "status": "PASS",
+      "detail": "100.0% of assembly covered at >=1x"
+    },
+    {
+      "check": "positive_expectation_met",
+      "status": "PASS",
+      "detail": "43 AMR determinants found; these are clinical carbapenemase/ESBL isolates, so zero calls would indicate pipeline failure"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+sample_id	gene_symbol	gene_name	element_type	subtype	drug_class	subclass	method	pct_identity	pct_coverage	contig
+KP_ES_7636	fieF	CDF family cation-efflux transporter FieF	STRESS	METAL	NA	NA	EXACTX	100.00	100.00	contig_1
+KP_ES_7636	emrD	multidrug efflux MFS transporter EmrD	AMR	AMR	EFFLUX	EFFLUX	BLASTX	99.24	100.00	contig_1
+KP_ES_7636	parC_S80I	Klebsiella pneumoniae quinolone resistant ParC	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.27	98.84	contig_1
+KP_ES_7636	oqxB19	multidrug efflux RND transporter permease subunit OqxB19	AMR	AMR	PHENICOL/QUINOLONE	PHENICOL/QUINOLONE	ALLELEX	100.00	100.00	contig_1
+KP_ES_7636	oqxA	multidrug efflux RND transporter periplasmic adaptor subunit OqxA	AMR	AMR	NITROFURAN/PHENICOL/QUINOLONE/TETRACYCLINE	NITROFURANTOIN/PHENICOL/QUINOLONE/TIGECYCLINE	EXACTX	100.00	100.00	contig_1
+KP_ES_7636	gyrA_S83I	Klebsiella pneumoniae quinolone resistant GyrA	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.77	100.00	contig_1
+KP_ES_7636	blaSHV-28	broad-spectrum class A beta-lactamase SHV-28	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_1
+KP_ES_7636	fosA	FosA5 family fosfomycin resistance glutathione transferase	AMR	AMR	FOSFOMYCIN	FOSFOMYCIN	EXACTX	100.00	100.00	contig_1
+KP_ES_7636	blaOXA-48	OXA-48 family carbapenem-hydrolyzing class D beta-lactamase OXA-48	AMR	AMR	BETA-LACTAM	CARBAPENEM	ALLELEX	100.00	100.00	contig_17
+KP_ES_7636	silE	silver-binding protein SilE	STRESS	METAL	SILVER	SILVER	BLASTX	91.61	100.00	contig_2
+KP_ES_7636	silS	copper/silver sensor histidine kinase SilS	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	silR	copper/silver response regulator transcription factor SilR	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	silC	Cu(+)/Ag(+) efflux RND transporter outer membrane channel SilC	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	silF	Cu(+)/Ag(+) efflux RND transporter periplasmic metallochaperone SilF	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	99.15	100.00	contig_2
+KP_ES_7636	silB	Cu(+)/Ag(+) efflux RND transporter periplasmic adaptor subunit SilB	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	97.91	100.00	contig_2
+KP_ES_7636	silA	Cu(+)/Ag(+) efflux RND transporter permease subunit SilA	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	98.85	100.00	contig_2
+KP_ES_7636	silP	Ag(+)-translocating P-type ATPase SilP	STRESS	METAL	SILVER	SILVER	BLASTX	94.18	99.64	contig_2
+KP_ES_7636	pcoA	multicopper oxidase PcoA	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	pcoB	copper-binding protein PcoB	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	pcoC	copper resistance system metallochaperone PcoC	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	pcoD	copper resistance inner membrane protein PcoD	STRESS	METAL	COPPER	COPPER	BLASTX	99.68	100.00	contig_2
+KP_ES_7636	pcoR	copper response regulator transcription factor PcoR	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	pcoS	copper resistance membrane spanning protein PcoS	STRESS	METAL	COPPER	COPPER	BLASTX	99.14	100.00	contig_2
+KP_ES_7636	pcoE	copper resistance system metallochaperone PcoE	STRESS	METAL	COPPER	COPPER	BLASTX	94.44	100.00	contig_2
+KP_ES_7636	arsC	glutaredoxin-dependent arsenate reductase	STRESS	METAL	ARSENIC	ARSENATE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	arsB	arsenite efflux transporter membrane subunit ArsB	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	arsA	arsenite efflux transporter ATPase subunit ArsA	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	arsD	arsenite efflux transporter metallochaperone ArsD	STRESS	METAL	ARSENIC	ARSENITE	BLASTX	91.67	100.00	contig_2
+KP_ES_7636	arsR	As(III)-sensing metalloregulatory transcriptional repressor ArsR	STRESS	METAL	ARSENIC	ARSENIC	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	clpK	heat shock survival AAA family ATPase ClpK	STRESS	HEAT	NA	NA	BLASTX	99.25	97.89	contig_2
+KP_ES_7636	hsp20	small heat shock protein sHSP20	STRESS	HEAT	NA	NA	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	sul2	sulfonamide-resistant dihydropteroate synthase Sul2	AMR	AMR	SULFONAMIDE	SULFONAMIDE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	aph(3'')-Ib	aminoglycoside O-phosphotransferase APH(3'')-Ib	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	blaTEM-1	broad-spectrum class A beta-lactamase TEM-1	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636	qnrB1	quinolone resistance pentapeptide repeat protein QnrB1	AMR	AMR	QUINOLONE	QUINOLONE	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636	tet(A)	tetracycline efflux MFS transporter Tet(A)	AMR	AMR	TETRACYCLINE	TETRACYCLINE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	catB3	type B-3 chloramphenicol O-acetyltransferase CatB3	AMR	AMR	PHENICOL	CHLORAMPHENICOL	PARTIALX	100.00	70.00	contig_2
+KP_ES_7636	blaOXA-1	oxacillin-hydrolyzing class D beta-lactamase OXA-1	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636	aac(6')-Ib-cr5	fluoroquinolone-acetylating aminoglycoside 6'-N-acetyltransferase AAC(6')-Ib-cr5	AMR	AMR	AMINOGLYCOSIDE/QUINOLONE	AMIKACIN/KANAMYCIN/QUINOLONE/TOBRAMYCIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636	aac(3)-IIe	aminoglycoside N-acetyltransferase AAC(3)-IIe	AMR	AMR	AMINOGLYCOSIDE	GENTAMICIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	dfrA14	trimethoprim-resistant dihydrofolate reductase DfrA14	AMR	AMR	TRIMETHOPRIM	TRIMETHOPRIM	EXACTX	100.00	100.00	contig_2
+KP_ES_7636	blaCTX-M-15	extended-spectrum class A beta-lactamase CTX-M-15	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d10_r1	blaCTX-M	CTX-M family extended-spectrum class A beta-lactamase	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	BLASTX	99.65	98.97	contig_14
+KP_ES_7636_d10_r1	silE	silver-binding protein SilE	STRESS	METAL	SILVER	SILVER	BLASTX	91.61	100.00	contig_15
+KP_ES_7636_d10_r1	silS	copper/silver sensor histidine kinase SilS	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	silR	copper/silver response regulator transcription factor SilR	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	silC	Cu(+)/Ag(+) efflux RND transporter outer membrane channel SilC	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	silF	Cu(+)/Ag(+) efflux RND transporter periplasmic metallochaperone SilF	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	99.15	100.00	contig_15
+KP_ES_7636_d10_r1	silB	Cu(+)/Ag(+) efflux RND transporter periplasmic adaptor subunit SilB	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	97.91	100.00	contig_15
+KP_ES_7636_d10_r1	silA	Cu(+)/Ag(+) efflux RND transporter permease subunit SilA	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	98.85	100.00	contig_15
+KP_ES_7636_d10_r1	silP	Ag(+)-translocating P-type ATPase SilP	STRESS	METAL	SILVER	SILVER	BLASTX	94.18	99.64	contig_15
+KP_ES_7636_d10_r1	pcoA	multicopper oxidase PcoA	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	pcoB	copper-binding protein PcoB	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	pcoC	copper resistance system metallochaperone PcoC	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	pcoD	copper resistance inner membrane protein PcoD	STRESS	METAL	COPPER	COPPER	BLASTX	99.68	100.00	contig_15
+KP_ES_7636_d10_r1	pcoR	copper response regulator transcription factor PcoR	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	pcoS	copper resistance membrane spanning protein PcoS	STRESS	METAL	COPPER	COPPER	BLASTX	99.14	100.00	contig_15
+KP_ES_7636_d10_r1	pcoE	copper resistance system metallochaperone PcoE	STRESS	METAL	COPPER	COPPER	BLASTX	94.44	100.00	contig_15
+KP_ES_7636_d10_r1	arsC	glutaredoxin-dependent arsenate reductase	STRESS	METAL	ARSENIC	ARSENATE	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	arsB	arsenite efflux transporter membrane subunit ArsB	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	arsA	arsenite efflux transporter ATPase subunit ArsA	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	arsD	arsenite efflux transporter metallochaperone ArsD	STRESS	METAL	ARSENIC	ARSENITE	BLASTX	91.67	100.00	contig_15
+KP_ES_7636_d10_r1	arsR	As(III)-sensing metalloregulatory transcriptional repressor ArsR	STRESS	METAL	ARSENIC	ARSENIC	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	clpK	heat shock survival AAA family ATPase ClpK	STRESS	HEAT	NA	NA	BLASTX	99.25	97.89	contig_15
+KP_ES_7636_d10_r1	hsp20	small heat shock protein sHSP20	STRESS	HEAT	NA	NA	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	sul2	sulfonamide-resistant dihydropteroate synthase Sul2	AMR	AMR	SULFONAMIDE	SULFONAMIDE	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	aph(3'')-Ib	aminoglycoside O-phosphotransferase APH(3'')-Ib	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	blaTEM-1	broad-spectrum class A beta-lactamase TEM-1	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_15
+KP_ES_7636_d10_r1	qnrB	QnrB family quinolone resistance pentapeptide repeat protein	AMR	AMR	QUINOLONE	QUINOLONE	BLASTX	100.00	99.07	contig_15
+KP_ES_7636_d10_r1	fieF	CDF family cation-efflux transporter FieF	STRESS	METAL	NA	NA	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d10_r1	dfrA14	trimethoprim-resistant dihydrofolate reductase DfrA14	AMR	AMR	TRIMETHOPRIM	TRIMETHOPRIM	EXACTX	100.00	100.00	contig_30
+KP_ES_7636_d10_r1	aac(3)-IIe	aminoglycoside N-acetyltransferase AAC(3)-IIe	AMR	AMR	AMINOGLYCOSIDE	GENTAMICIN	EXACTX	100.00	100.00	contig_30
+KP_ES_7636_d10_r1	aac(6')-Ib-cr5	fluoroquinolone-acetylating aminoglycoside 6'-N-acetyltransferase AAC(6')-Ib-cr5	AMR	AMR	AMINOGLYCOSIDE/QUINOLONE	AMIKACIN/KANAMYCIN/QUINOLONE/TOBRAMYCIN	ALLELEX	100.00	100.00	contig_30
+KP_ES_7636_d10_r1	blaOXA-1	oxacillin-hydrolyzing class D beta-lactamase OXA-1	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_30
+KP_ES_7636_d10_r1	catB3	type B-3 chloramphenicol O-acetyltransferase CatB3	AMR	AMR	PHENICOL	CHLORAMPHENICOL	PARTIALX	100.00	70.00	contig_30
+KP_ES_7636_d10_r1	blaSHV-28	broad-spectrum class A beta-lactamase SHV-28	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_32
+KP_ES_7636_d10_r1	nfsB_E175RfsTer2	Klebsiella pneumoniae nitrofurantoin resistant NfsB	AMR	POINT_DISRUPT	NITROFURAN	NITROFURANTOIN	POINTX	99.54	100.00	contig_35
+KP_ES_7636_d10_r1	fosA	FosA5 family fosfomycin resistance glutathione transferase	AMR	AMR	FOSFOMYCIN	FOSFOMYCIN	EXACTX	100.00	100.00	contig_4
+KP_ES_7636_d10_r1	oqxA	multidrug efflux RND transporter periplasmic adaptor subunit OqxA	AMR	AMR	NITROFURAN/PHENICOL/QUINOLONE/TETRACYCLINE	NITROFURANTOIN/PHENICOL/QUINOLONE/TIGECYCLINE	EXACTX	100.00	100.00	contig_49
+KP_ES_7636_d10_r1	gyrA_S83I	Klebsiella pneumoniae quinolone resistant GyrA	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.77	100.00	contig_57
+KP_ES_7636_d10_r1	emrD	multidrug efflux MFS transporter EmrD	AMR	AMR	EFFLUX	EFFLUX	BLASTX	99.24	100.00	contig_68
+KP_ES_7636_d10_r1	blaOXA-48	OXA-48 family carbapenem-hydrolyzing class D beta-lactamase OXA-48	AMR	AMR	BETA-LACTAM	CARBAPENEM	ALLELEX	100.00	100.00	contig_72
+KP_ES_7636_d20_r1	fosA	FosA5 family fosfomycin resistance glutathione transferase	AMR	AMR	FOSFOMYCIN	FOSFOMYCIN	EXACTX	100.00	100.00	contig_16
+KP_ES_7636_d20_r1	fieF	CDF family cation-efflux transporter FieF	STRESS	METAL	NA	NA	EXACTX	100.00	100.00	contig_16
+KP_ES_7636_d20_r1	emrD	multidrug efflux MFS transporter EmrD	AMR	AMR	EFFLUX	EFFLUX	BLASTX	99.24	100.00	contig_16
+KP_ES_7636_d20_r1	parC_S80I	Klebsiella pneumoniae quinolone resistant ParC	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.27	98.84	contig_16
+KP_ES_7636_d20_r1	oqxB19	multidrug efflux RND transporter permease subunit OqxB19	AMR	AMR	PHENICOL/QUINOLONE	PHENICOL/QUINOLONE	ALLELEX	100.00	100.00	contig_16
+KP_ES_7636_d20_r1	oqxA	multidrug efflux RND transporter periplasmic adaptor subunit OqxA	AMR	AMR	NITROFURAN/PHENICOL/QUINOLONE/TETRACYCLINE	NITROFURANTOIN/PHENICOL/QUINOLONE/TIGECYCLINE	EXACTX	100.00	100.00	contig_16
+KP_ES_7636_d20_r1	gyrA_S83I	Klebsiella pneumoniae quinolone resistant GyrA	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.77	100.00	contig_16
+KP_ES_7636_d20_r1	blaSHV-28	broad-spectrum class A beta-lactamase SHV-28	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_16
+KP_ES_7636_d20_r1	blaOXA-48	OXA-48 family carbapenem-hydrolyzing class D beta-lactamase OXA-48	AMR	AMR	BETA-LACTAM	CARBAPENEM	ALLELEX	100.00	100.00	contig_17
+KP_ES_7636_d20_r1	blaCTX-M-15	extended-spectrum class A beta-lactamase CTX-M-15	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	dfrA14	trimethoprim-resistant dihydrofolate reductase DfrA14	AMR	AMR	TRIMETHOPRIM	TRIMETHOPRIM	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	aac(3)-IIe	aminoglycoside N-acetyltransferase AAC(3)-IIe	AMR	AMR	AMINOGLYCOSIDE	GENTAMICIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	aac(6')-Ib-cr5	fluoroquinolone-acetylating aminoglycoside 6'-N-acetyltransferase AAC(6')-Ib-cr5	AMR	AMR	AMINOGLYCOSIDE/QUINOLONE	AMIKACIN/KANAMYCIN/QUINOLONE/TOBRAMYCIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	blaOXA-1	oxacillin-hydrolyzing class D beta-lactamase OXA-1	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	catB3	type B-3 chloramphenicol O-acetyltransferase CatB3	AMR	AMR	PHENICOL	CHLORAMPHENICOL	PARTIALX	100.00	70.00	contig_2
+KP_ES_7636_d20_r1	tet(A)	tetracycline efflux MFS transporter Tet(A)	AMR	AMR	TETRACYCLINE	TETRACYCLINE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	qnrB1	quinolone resistance pentapeptide repeat protein QnrB1	AMR	AMR	QUINOLONE	QUINOLONE	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	blaTEM-1	broad-spectrum class A beta-lactamase TEM-1	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	aph(3'')-Ib	aminoglycoside O-phosphotransferase APH(3'')-Ib	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	sul2	sulfonamide-resistant dihydropteroate synthase Sul2	AMR	AMR	SULFONAMIDE	SULFONAMIDE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	hsp20	small heat shock protein sHSP20	STRESS	HEAT	NA	NA	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	clpK	heat shock survival AAA family ATPase ClpK	STRESS	HEAT	NA	NA	BLASTX	99.14	97.89	contig_2
+KP_ES_7636_d20_r1	arsR	As(III)-sensing metalloregulatory transcriptional repressor ArsR	STRESS	METAL	ARSENIC	ARSENIC	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	arsD	arsenite efflux transporter metallochaperone ArsD	STRESS	METAL	ARSENIC	ARSENITE	BLASTX	91.67	100.00	contig_2
+KP_ES_7636_d20_r1	arsA	arsenite efflux transporter ATPase subunit ArsA	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	arsB	arsenite efflux transporter membrane subunit ArsB	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	arsC	glutaredoxin-dependent arsenate reductase	STRESS	METAL	ARSENIC	ARSENATE	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	pcoE	copper resistance system metallochaperone PcoE	STRESS	METAL	COPPER	COPPER	BLASTX	94.44	100.00	contig_2
+KP_ES_7636_d20_r1	pcoS	copper resistance membrane spanning protein PcoS	STRESS	METAL	COPPER	COPPER	BLASTX	99.14	100.00	contig_2
+KP_ES_7636_d20_r1	pcoR	copper response regulator transcription factor PcoR	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	pcoD	copper resistance inner membrane protein PcoD	STRESS	METAL	COPPER	COPPER	BLASTX	99.68	100.00	contig_2
+KP_ES_7636_d20_r1	pcoC	copper resistance system metallochaperone PcoC	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	pcoB	copper-binding protein PcoB	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	pcoA	multicopper oxidase PcoA	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	silP	Ag(+)-translocating P-type ATPase SilP	STRESS	METAL	SILVER	SILVER	BLASTX	94.18	99.64	contig_2
+KP_ES_7636_d20_r1	silA	Cu(+)/Ag(+) efflux RND transporter permease subunit SilA	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	98.85	100.00	contig_2
+KP_ES_7636_d20_r1	silB	Cu(+)/Ag(+) efflux RND transporter periplasmic adaptor subunit SilB	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	97.91	100.00	contig_2
+KP_ES_7636_d20_r1	silF	Cu(+)/Ag(+) efflux RND transporter periplasmic metallochaperone SilF	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	99.15	100.00	contig_2
+KP_ES_7636_d20_r1	silC	Cu(+)/Ag(+) efflux RND transporter outer membrane channel SilC	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	silR	copper/silver response regulator transcription factor SilR	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	silS	copper/silver sensor histidine kinase SilS	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_2
+KP_ES_7636_d20_r1	silE	silver-binding protein SilE	STRESS	METAL	SILVER	SILVER	BLASTX	91.61	100.00	contig_2
+KP_ES_7636_d40_r1	gyrA_S83I	Klebsiella pneumoniae quinolone resistant GyrA	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.77	100.00	contig_1
+KP_ES_7636_d40_r1	blaSHV-28	broad-spectrum class A beta-lactamase SHV-28	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_1
+KP_ES_7636_d40_r1	fosA	FosA5 family fosfomycin resistance glutathione transferase	AMR	AMR	FOSFOMYCIN	FOSFOMYCIN	EXACTX	100.00	100.00	contig_1
+KP_ES_7636_d40_r1	fieF	CDF family cation-efflux transporter FieF	STRESS	METAL	NA	NA	EXACTX	100.00	100.00	contig_1
+KP_ES_7636_d40_r1	emrD	multidrug efflux MFS transporter EmrD	AMR	AMR	EFFLUX	EFFLUX	BLASTX	99.24	100.00	contig_1
+KP_ES_7636_d40_r1	parC_S80I	Klebsiella pneumoniae quinolone resistant ParC	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.27	98.84	contig_1
+KP_ES_7636_d40_r1	oqxB19	multidrug efflux RND transporter permease subunit OqxB19	AMR	AMR	PHENICOL/QUINOLONE	PHENICOL/QUINOLONE	ALLELEX	100.00	100.00	contig_1
+KP_ES_7636_d40_r1	oqxA	multidrug efflux RND transporter periplasmic adaptor subunit OqxA	AMR	AMR	NITROFURAN/PHENICOL/QUINOLONE/TETRACYCLINE	NITROFURANTOIN/PHENICOL/QUINOLONE/TIGECYCLINE	EXACTX	100.00	100.00	contig_1
+KP_ES_7636_d40_r1	blaOXA-48	OXA-48 family carbapenem-hydrolyzing class D beta-lactamase OXA-48	AMR	AMR	BETA-LACTAM	CARBAPENEM	ALLELEX	100.00	100.00	contig_17
+KP_ES_7636_d40_r1	blaCTX-M-15	extended-spectrum class A beta-lactamase CTX-M-15	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	dfrA14	trimethoprim-resistant dihydrofolate reductase DfrA14	AMR	AMR	TRIMETHOPRIM	TRIMETHOPRIM	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	aac(3)-IIe	aminoglycoside N-acetyltransferase AAC(3)-IIe	AMR	AMR	AMINOGLYCOSIDE	GENTAMICIN	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	aac(6')-Ib-cr5	fluoroquinolone-acetylating aminoglycoside 6'-N-acetyltransferase AAC(6')-Ib-cr5	AMR	AMR	AMINOGLYCOSIDE/QUINOLONE	AMIKACIN/KANAMYCIN/QUINOLONE/TOBRAMYCIN	ALLELEX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	blaOXA-1	oxacillin-hydrolyzing class D beta-lactamase OXA-1	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	catB3	type B-3 chloramphenicol O-acetyltransferase CatB3	AMR	AMR	PHENICOL	CHLORAMPHENICOL	PARTIALX	100.00	70.00	contig_3
+KP_ES_7636_d40_r1	tet(A)	tetracycline efflux MFS transporter Tet(A)	AMR	AMR	TETRACYCLINE	TETRACYCLINE	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	qnrB1	quinolone resistance pentapeptide repeat protein QnrB1	AMR	AMR	QUINOLONE	QUINOLONE	ALLELEX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	blaTEM-1	broad-spectrum class A beta-lactamase TEM-1	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	aph(3'')-Ib	aminoglycoside O-phosphotransferase APH(3'')-Ib	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	sul2	sulfonamide-resistant dihydropteroate synthase Sul2	AMR	AMR	SULFONAMIDE	SULFONAMIDE	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	hsp20	small heat shock protein sHSP20	STRESS	HEAT	NA	NA	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	clpK	heat shock survival AAA family ATPase ClpK	STRESS	HEAT	NA	NA	BLASTX	99.25	97.89	contig_3
+KP_ES_7636_d40_r1	arsR	As(III)-sensing metalloregulatory transcriptional repressor ArsR	STRESS	METAL	ARSENIC	ARSENIC	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	arsD	arsenite efflux transporter metallochaperone ArsD	STRESS	METAL	ARSENIC	ARSENITE	BLASTX	91.67	100.00	contig_3
+KP_ES_7636_d40_r1	arsA	arsenite efflux transporter ATPase subunit ArsA	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	arsB	arsenite efflux transporter membrane subunit ArsB	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	arsC	glutaredoxin-dependent arsenate reductase	STRESS	METAL	ARSENIC	ARSENATE	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	pcoE	copper resistance system metallochaperone PcoE	STRESS	METAL	COPPER	COPPER	BLASTX	94.44	100.00	contig_3
+KP_ES_7636_d40_r1	pcoS	copper resistance membrane spanning protein PcoS	STRESS	METAL	COPPER	COPPER	BLASTX	99.14	100.00	contig_3
+KP_ES_7636_d40_r1	pcoR	copper response regulator transcription factor PcoR	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	pcoD	copper resistance inner membrane protein PcoD	STRESS	METAL	COPPER	COPPER	BLASTX	99.68	100.00	contig_3
+KP_ES_7636_d40_r1	pcoC	copper resistance system metallochaperone PcoC	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	pcoB	copper-binding protein PcoB	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	pcoA	multicopper oxidase PcoA	STRESS	METAL	COPPER	COPPER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	silP	Ag(+)-translocating P-type ATPase SilP	STRESS	METAL	SILVER	SILVER	BLASTX	94.18	99.64	contig_3
+KP_ES_7636_d40_r1	silA	Cu(+)/Ag(+) efflux RND transporter permease subunit SilA	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	98.85	100.00	contig_3
+KP_ES_7636_d40_r1	silB	Cu(+)/Ag(+) efflux RND transporter periplasmic adaptor subunit SilB	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	97.91	100.00	contig_3
+KP_ES_7636_d40_r1	silF	Cu(+)/Ag(+) efflux RND transporter periplasmic metallochaperone SilF	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	99.15	100.00	contig_3
+KP_ES_7636_d40_r1	silC	Cu(+)/Ag(+) efflux RND transporter outer membrane channel SilC	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	silR	copper/silver response regulator transcription factor SilR	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	silS	copper/silver sensor histidine kinase SilS	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_3
+KP_ES_7636_d40_r1	silE	silver-binding protein SilE	STRESS	METAL	SILVER	SILVER	BLASTX	91.61	100.00	contig_3
+KP_ES_7636_d5_r1	parC_S80I	Klebsiella pneumoniae quinolone resistant ParC	AMR	POINT	QUINOLONE	QUINOLONE	POINTX	99.27	98.84	contig_104
+KP_ES_7636_d5_r1	silA	Cu(+)/Ag(+) efflux RND transporter permease subunit SilA	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	98.85	100.00	contig_136
+KP_ES_7636_d5_r1	silB	Cu(+)/Ag(+) efflux RND transporter periplasmic adaptor subunit SilB	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	97.91	100.00	contig_136
+KP_ES_7636_d5_r1	silF	Cu(+)/Ag(+) efflux RND transporter periplasmic metallochaperone SilF	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	BLASTX	99.15	100.00	contig_136
+KP_ES_7636_d5_r1	silC	Cu(+)/Ag(+) efflux RND transporter outer membrane channel SilC	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_136
+KP_ES_7636_d5_r1	silR	copper/silver response regulator transcription factor SilR	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	EXACTX	100.00	100.00	contig_136
+KP_ES_7636_d5_r1	silS	copper/silver sensor histidine kinase SilS	STRESS	METAL	COPPER/SILVER	COPPER/SILVER	PARTIALX	100.00	75.76	contig_136
+KP_ES_7636_d5_r1	silE	silver-binding protein SilE	STRESS	METAL	SILVER	SILVER	BLASTX	91.61	100.00	contig_136
+KP_ES_7636_d5_r1	fosA	FosA5 family fosfomycin resistance glutathione transferase	AMR	AMR	FOSFOMYCIN	FOSFOMYCIN	EXACTX	100.00	100.00	contig_139
+KP_ES_7636_d5_r1	ompK36_L184FfsTer14	Klebsiella pneumoniae carbapenem resistant OmpK36	AMR	POINT_DISRUPT	BETA-LACTAM	CARBAPENEM	POINTX	92.76	100.00	contig_141
+KP_ES_7636_d5_r1	pcoS	copper resistance membrane spanning protein PcoS	STRESS	METAL	COPPER	COPPER	PARTIALX	99.19	53.22	contig_144
+KP_ES_7636_d5_r1	pcoE	copper resistance system metallochaperone PcoE	STRESS	METAL	COPPER	COPPER	BLASTX	94.44	100.00	contig_144
+KP_ES_7636_d5_r1	arsC	glutaredoxin-dependent arsenate reductase	STRESS	METAL	ARSENIC	ARSENATE	EXACTX	100.00	100.00	contig_144
+KP_ES_7636_d5_r1	arsB	arsenite efflux transporter membrane subunit ArsB	STRESS	METAL	ARSENIC	ARSENITE	PARTIALX	100.00	64.80	contig_144
+KP_ES_7636_d5_r1	arsA	arsenite efflux transporter ATPase subunit ArsA	STRESS	METAL	ARSENIC	ARSENITE	EXACTX	100.00	100.00	contig_144
+KP_ES_7636_d5_r1	arsD	arsenite efflux transporter metallochaperone ArsD	STRESS	METAL	ARSENIC	ARSENITE	BLASTX	91.67	100.00	contig_144
+KP_ES_7636_d5_r1	arsR	As(III)-sensing metalloregulatory transcriptional repressor ArsR	STRESS	METAL	ARSENIC	ARSENIC	EXACTX	100.00	100.00	contig_144
+KP_ES_7636_d5_r1	clpK	heat shock survival AAA family ATPase ClpK	STRESS	HEAT	NA	NA	BLASTX	99.25	97.89	contig_144
+KP_ES_7636_d5_r1	hsp20	small heat shock protein sHSP20	STRESS	HEAT	NA	NA	EXACTX	100.00	100.00	contig_144
+KP_ES_7636_d5_r1	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	PARTIALX	100.00	69.42	contig_144
+KP_ES_7636_d5_r1	blaTEM	TEM family class A beta-lactamase	AMR	AMR	BETA-LACTAM	BETA-LACTAM	PARTIALX	97.40	66.43	contig_144
+KP_ES_7636_d5_r1	blaOXA-48	OXA-48 family carbapenem-hydrolyzing class D beta-lactamase OXA-48	AMR	AMR	BETA-LACTAM	CARBAPENEM	ALLELEX	100.00	100.00	contig_44
+KP_ES_7636_d5_r1	sul2	sulfonamide-resistant dihydropteroate synthase Sul2	AMR	AMR	SULFONAMIDE	SULFONAMIDE	EXACTX	100.00	100.00	contig_50
+KP_ES_7636_d5_r1	aph(3'')-Ib	aminoglycoside O-phosphotransferase APH(3'')-Ib	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_50
+KP_ES_7636_d5_r1	aph(6)-Id	aminoglycoside O-phosphotransferase APH(6)-Id	AMR	AMR	AMINOGLYCOSIDE	STREPTOMYCIN	EXACTX	100.00	100.00	contig_50
+KP_ES_7636_d5_r1	blaTEM	TEM family class A beta-lactamase	AMR	AMR	BETA-LACTAM	BETA-LACTAM	PARTIALX	100.00	53.85	contig_50
+KP_ES_7636_d5_r1	qnrB1	quinolone resistance pentapeptide repeat protein QnrB1	AMR	AMR	QUINOLONE	QUINOLONE	ALLELEX	100.00	100.00	contig_50
+KP_ES_7636_d5_r1	tet(A)	tetracycline efflux MFS transporter Tet(A)	AMR	AMR	TETRACYCLINE	TETRACYCLINE	EXACTX	100.00	100.00	contig_51
+KP_ES_7636_d5_r1	catB3	type B-3 chloramphenicol O-acetyltransferase CatB3	AMR	AMR	PHENICOL	CHLORAMPHENICOL	PARTIALX	100.00	70.00	contig_51
+KP_ES_7636_d5_r1	blaOXA	OXA-1 family class D beta-lactamase	AMR	AMR	BETA-LACTAM	BETA-LACTAM	BLASTX	99.64	100.00	contig_51
+KP_ES_7636_d5_r1	aac(6')-Ib-cr5	fluoroquinolone-acetylating aminoglycoside 6'-N-acetyltransferase AAC(6')-Ib-cr5	AMR	AMR	AMINOGLYCOSIDE/QUINOLONE	AMIKACIN/KANAMYCIN/QUINOLONE/TOBRAMYCIN	ALLELEX	100.00	100.00	contig_51
+KP_ES_7636_d5_r1	aac(3)-IIe	aminoglycoside N-acetyltransferase AAC(3)-IIe	AMR	AMR	AMINOGLYCOSIDE	GENTAMICIN	EXACTX	100.00	100.00	contig_51
+KP_ES_7636_d5_r1	dfrA14	trimethoprim-resistant dihydrofolate reductase DfrA14	AMR	AMR	TRIMETHOPRIM	TRIMETHOPRIM	PARTIALX	90.00	61.78	contig_51
+KP_ES_7636_d5_r1	blaCTX-M-15	extended-spectrum class A beta-lactamase CTX-M-15	AMR	AMR	BETA-LACTAM	CEPHALOSPORIN	ALLELEX	100.00	100.00	contig_51
+KP_ES_7636_d5_r1	blaSHV-28	broad-spectrum class A beta-lactamase SHV-28	AMR	AMR	BETA-LACTAM	BETA-LACTAM	ALLELEX	100.00	100.00	contig_81

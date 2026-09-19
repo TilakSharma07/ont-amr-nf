@@ -1,0 +1,6 @@
+sample_id	role	species	n_contigs	total_len	n50	largest	gc_percent	mean_depth	breadth_1x
+KP_ES_7636	test	Klebsiella pneumoniae	12	5889358	5425444	5425444	56.95	29.88	1.0000
+KP_ES_7636_d10_r1	titration	Klebsiella pneumoniae	59	5842430	203873	618487	57.00	8.42	0.9999
+KP_ES_7636_d20_r1	titration	Klebsiella pneumoniae	12	5888548	5425465	5425465	56.96	16.90	1.0000
+KP_ES_7636_d40_r1	titration	Klebsiella pneumoniae	11	5887565	5425446	5425446	56.96	29.88	1.0000
+KP_ES_7636_d5_r1	titration	Klebsiella pneumoniae	139	4758585	53206	136734	56.89	4.71	1.0000

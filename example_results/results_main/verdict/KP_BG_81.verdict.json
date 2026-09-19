@@ -1,0 +1,50 @@
+{
+  "sample_id": "KP_BG_81",
+  "role": "test",
+  "verdict": "PASS",
+  "flye_status": "assembled",
+  "amr_calls": 47,
+  "mean_depth": 36.47,
+  "n50": 5437787,
+  "total_len": 5706551,
+  "n_contigs": 4,
+  "breadth_1x": 1.0,
+  "amr_result_interpretable": true,
+  "checks": [
+    {
+      "check": "assembly_produced",
+      "status": "PASS",
+      "detail": "flye status: assembled (exit 0)"
+    },
+    {
+      "check": "depth",
+      "status": "PASS",
+      "detail": "mean realised depth 36.5x (floor 20x)"
+    },
+    {
+      "check": "n50",
+      "status": "PASS",
+      "detail": "N50 5,437,787 bp (floor 50,000 bp)"
+    },
+    {
+      "check": "genome_size",
+      "status": "PASS",
+      "detail": "assembly 5,706,551 bp (expected 4,000,000-7,000,000)"
+    },
+    {
+      "check": "fragmentation",
+      "status": "PASS",
+      "detail": "4 contigs (ceiling 200)"
+    },
+    {
+      "check": "breadth",
+      "status": "PASS",
+      "detail": "100.0% of assembly covered at >=1x"
+    },
+    {
+      "check": "positive_expectation_met",
+      "status": "PASS",
+      "detail": "47 AMR determinants found; these are clinical carbapenemase/ESBL isolates, so zero calls would indicate pipeline failure"
+    }
+  ]
+}

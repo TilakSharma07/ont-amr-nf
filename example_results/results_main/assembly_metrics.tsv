@@ -1,0 +1,6 @@
+sample_id	role	species	n_contigs	total_len	n50	largest	gc_percent	mean_depth	breadth_1x
+EC_PE_M09449	cross_species	Escherichia coli	7	5115139	4740491	4740491	50.65	31.16	1.0000
+KP_BG_81	test	Klebsiella pneumoniae	4	5706551	5437787	5437787	56.98	36.47	1.0000
+KP_ES_7636	test	Klebsiella pneumoniae	11	5887566	5425447	5425447	56.96	29.88	1.0000
+KP_ES_7983	clonal_replicate	Klebsiella pneumoniae	3	5617970	5310109	5310109	57.19	26.10	1.0000
+NEG_DECOY	negative_control	Klebsiella pneumoniae	0	0	0	0	NA	0.00	0.0000

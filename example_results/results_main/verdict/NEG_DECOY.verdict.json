@@ -1,0 +1,50 @@
+{
+  "sample_id": "NEG_DECOY",
+  "role": "negative_control",
+  "verdict": "PASS",
+  "flye_status": "no_assembly",
+  "amr_calls": 0,
+  "mean_depth": 0.0,
+  "n50": 0,
+  "total_len": 0,
+  "n_contigs": 0,
+  "breadth_1x": 0.0,
+  "amr_result_interpretable": true,
+  "checks": [
+    {
+      "check": "assembly_produced",
+      "status": "FAIL",
+      "detail": "flye status: no_assembly (exit 1)"
+    },
+    {
+      "check": "depth",
+      "status": "FAIL",
+      "detail": "mean realised depth 0.0x (floor 20x)"
+    },
+    {
+      "check": "n50",
+      "status": "FAIL",
+      "detail": "N50 0 bp (floor 50,000 bp)"
+    },
+    {
+      "check": "genome_size",
+      "status": "FAIL",
+      "detail": "assembly 0 bp (expected 4,000,000-7,000,000)"
+    },
+    {
+      "check": "fragmentation",
+      "status": "PASS",
+      "detail": "0 contigs (ceiling 200)"
+    },
+    {
+      "check": "breadth",
+      "status": "FAIL",
+      "detail": "0.0% of assembly covered at >=1x"
+    },
+    {
+      "check": "negative_control_is_empty",
+      "status": "PASS",
+      "detail": "0 AMR calls on shuffled sequence (must be 0)"
+    }
+  ]
+}

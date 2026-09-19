@@ -39,3 +39,9 @@ __pycache__/
 # generates its own in a temp dir.
 .bad_sheet.csv
 .sheet_*.csv
+
+# Large intermediates are not shipped; example_results holds only the tables,
+# per-sample calls and verdicts the tests and figures need.
+*.bam
+*.bai
+*.fasta.gz

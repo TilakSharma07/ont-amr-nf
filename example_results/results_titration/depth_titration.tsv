@@ -1,0 +1,5 @@
+sample_id	parent_id	target_depth	replicate	realised_depth	n50	n_genes	n_genes_full_depth	recovery_fraction	genes_missed	verdict
+KP_ES_7636_d10_r1	KP_ES_7636	10	1	8.42	203873	18	20	0.7500	blaCTX-M-15;oqxB19;parC_S80I;qnrB1;tet(A)	FAIL
+KP_ES_7636_d20_r1	KP_ES_7636	20	1	16.90	5425465	20	20	1.0000	-	FAIL
+KP_ES_7636_d40_r1	KP_ES_7636	40	1	29.88	5425446	20	20	1.0000	-	PASS
+KP_ES_7636_d5_r1	KP_ES_7636	5	1	4.71	53206	17	20	0.7000	blaOXA-1;blaTEM-1;emrD;gyrA_S83I;oqxA;oqxB19	FAIL
