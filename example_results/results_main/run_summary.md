@@ -2,7 +2,8 @@
 
 - samples evaluated: **6**
 - passed validation: **6/6**
-- total AMR determinant calls: **188**
+- resistance determinants called: **93**
+- other elements called (stress, virulence): **95**
 
 ## Per-sample
 

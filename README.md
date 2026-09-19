@@ -399,6 +399,16 @@ were exactly that until these tests were written:
   check had pinned only two of the three files, leaving the loosest one free to drift
   into the other's definition. It now checks each number against its own definition,
   and swapping the row count in for the symbol count fails it.
+- I audited that exact conflation and shipped it anyway, three lines higher up the same
+  file. `run_summary.md` headlined "total AMR determinant calls: **188**" — every
+  element row, 93 AMR plus 87 metal-tolerance plus 8 virulence — while I was pinning
+  the per-sample column directly beneath it and concluding there was no defect. The
+  aggregator's variable was called `amr_rows` and held all of them, so the name read
+  true at the call site. It is `element_rows` now, the headline reports the two
+  quantities separately (93 determinants, 95 other elements), and the consistency check
+  pins both headline numbers as well as the per-sample column — including a check that
+  the old label does not come back. Reviewing one number in a file is not reviewing the
+  file; the header is where a reader's eye lands first, and it was the wrong number.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source

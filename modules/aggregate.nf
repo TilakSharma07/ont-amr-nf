@@ -26,8 +26,12 @@ process AGGREGATE_RESULTS {
         # than zero -- zero would read as a measured value. Render them as NA.
         return "NA" if x is None else x
 
-    # ---- AMR calls: one tidy long table, every sample, one row per determinant ----
-    amr_rows = []
+    # ---- AMRFinderPlus calls: one tidy long table, every sample, one row per call ----
+    # Named element_rows, not amr_rows: AMRFinderPlus reports resistance determinants
+    # alongside STRESS (biocide/metal/heat) and VIRULENCE elements, and this list holds
+    # all three. The old name is how the run summary came to headline 188 "AMR
+    # determinant calls" when 93 of those rows are AMR and 87 are metal tolerance.
+    element_rows = []
     for fn in sorted(glob.glob("amr/*.tsv")):
         sample = os.path.basename(fn).replace(".amrfinder.tsv", "")
         with open(fn) as fh:
@@ -39,7 +43,7 @@ process AGGREGATE_RESULTS {
                         if n in r and r[n] not in (None, ""):
                             return r[n]
                     return default
-                amr_rows.append({
+                element_rows.append({
                     "sample_id":    sample,
                     "gene_symbol":  pick("Element symbol", "Gene symbol"),
                     "gene_name":    pick("Element name", "Sequence name"),
@@ -57,7 +61,7 @@ process AGGREGATE_RESULTS {
                 "drug_class","subclass","method","pct_identity","pct_coverage","contig"]
     with open("amr_calls.tsv","w",newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=amr_cols, delimiter="\\t")
-        w.writeheader(); w.writerows(amr_rows)
+        w.writeheader(); w.writerows(element_rows)
 
     # ---- assembly metrics ----
     stat_rows = []
@@ -107,7 +111,7 @@ process AGGREGATE_RESULTS {
     # been quoted.
     genes_per_sample = {}
     elements_per_sample = {}
-    for r in amr_rows:
+    for r in element_rows:
         elements_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
         if str(r.get("element_type", "")).upper() == "AMR":
             genes_per_sample.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
@@ -139,12 +143,17 @@ process AGGREGATE_RESULTS {
 
     # ---- human-readable run summary ----
     n_pass = sum(1 for v in vrows if v["verdict"] == "PASS")
+    # Count AMR rows explicitly rather than reusing len(element_rows): the headline
+    # says "resistance determinants", so only element_type == AMR may be counted there.
+    n_amr_rows = sum(1 for r in element_rows
+                     if str(r.get("element_type", "")).upper() == "AMR")
     neg = [v for v in vrows if v["role"] == "negative_control"]
 
     L = ["# Run summary\\n",
          f"- samples evaluated: **{len(vrows)}**",
          f"- passed validation: **{n_pass}/{len(vrows)}**",
-         f"- total AMR determinant calls: **{len(amr_rows)}**\\n",
+         f"- resistance determinants called: **{n_amr_rows}**",
+         f"- other elements called (stress, virulence): **{len(element_rows) - n_amr_rows}**\\n",
          "## Per-sample\\n",
          "| Sample | Role | Verdict | Depth | N50 | AMR genes |",
          "|---|---|---|---|---|---|"]
@@ -200,7 +209,7 @@ process AGGREGATE_RESULTS {
         cc_genes = elements_per_sample.get("CALLER_CONTROL", set())
         # Elements of ANY class, not AMR only: a control must return nothing at all,
         # not merely nothing under one label.
-        n_cc = sum(1 for r in amr_rows if r["sample_id"] == "CALLER_CONTROL")
+        n_cc = sum(1 for r in element_rows if r["sample_id"] == "CALLER_CONTROL")
         if n_cc == 0:
             L.append(f"\\n**Caller-level control** (tests the gene caller) — a real assembly "
                      f"with its bases shuffled within each contig, identical in contig "
@@ -213,7 +222,8 @@ process AGGREGATE_RESULTS {
                      f"**Investigate before trusting any call in this run.**")
     open("run_summary.md","w").write("\\n".join(L) + "\\n")
 
-    print(f"[aggregate] {len(vrows)} samples, {len(amr_rows)} AMR calls, {n_pass} passed validation")
+    print(f"[aggregate] {len(vrows)} samples, {n_amr_rows} AMR calls "
+          f"({len(element_rows)} elements total), {n_pass} passed validation")
     """
 
     stub:

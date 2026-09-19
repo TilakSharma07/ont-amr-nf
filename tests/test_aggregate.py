@@ -321,7 +321,32 @@ def check_published_counts_agree(results):
         for r in rows:
             if etype(r) == "AMR":
                 per_sym.setdefault(r["sample_id"], set()).add(r["gene_symbol"])
+        # The headline counts, too. The per-sample column was pinned while
+        # "- total AMR determinant calls: **188**" sat three lines above it, labelling
+        # every element row -- 93 AMR, 87 stress, 8 virulence -- as a resistance
+        # determinant. Pinning one number in a file and not the one above it is how
+        # that survived an audit of this very conflation.
+        head_pat = {
+            "resistance determinants called":
+                sum(1 for r in rows if etype(r) == "AMR"),
+            "other elements called (stress, virulence)":
+                sum(1 for r in rows if etype(r) != "AMR"),
+        }
+        with open(run_summary) as fh:
+            head_txt = fh.read()
         import re as _re
+        for label, exp in head_pat.items():
+            m = _re.search(_re.escape(label) + r":\s*\*\*(\d+)\*\*", head_txt)
+            if m is None:
+                bad.append(f"run_summary.md has no '{label}' headline")
+            elif int(m.group(1)) != exp:
+                bad.append(f"run_summary.md '{label}'={m.group(1)}, "
+                           f"call table has {exp}")
+        # and the label that caused it must not come back
+        if _re.search(r"total AMR determinant calls", head_txt):
+            bad.append("run_summary.md headlines 'total AMR determinant calls', "
+                       "which counted stress and virulence rows as AMR")
+
         with open(run_summary) as fh:
             for line in fh:
                 if not line.lstrip().startswith("|"):
