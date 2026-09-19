@@ -239,6 +239,25 @@ def figure_controls():
     if not val:
         return
 
+    # Skip on a titration results directory. The README documents rendering twice into
+    # one figure directory -- once from the main results, once from the titration
+    # results, because fig3 needs data the main run does not have -- and this function
+    # writes a fixed filename, so the second command silently replaced the real
+    # six-sample figure with the titration parent isolate alone, captioned "no controls
+    # in this run". figure_titration() already skips when handed no titration table;
+    # this is the same courtesy in the other direction.
+    #
+    # The test is deliberately narrower than "has no controls": --make_decoy false
+    # --caller_control false is a legitimate way to run the pipeline, and in that case
+    # the absence has to be visible in the figure rather than hidden by a missing one.
+    # A titration directory is the specific case of titration-role rows with no
+    # controls; a combined run has controls and still renders.
+    have_controls = any(v["role"] in ("negative_control", "caller_control") for v in val) \
+        or os.path.exists(os.path.join(RESULTS, "amr", "CALLER_CONTROL.amrfinder.tsv"))
+    if any(v["role"] == "titration" for v in val) and not have_controls:
+        print("titration results dir, not a controls panel; skipping fig1")
+        return
+
     # Count from amr_calls.tsv by element type rather than trusting a single summary
     # column: AMRFinderPlus reports resistance determinants alongside STRESS
     # (biocide/metal/heat) and VIRULENCE elements, and conflating them roughly doubles
@@ -435,6 +454,14 @@ def figure_profile():
             if r["element_type"] == "AMR"
             and is_isolate(keep_roles.get(r["sample_id"], ""))]
     if not rows:
+        return
+
+    # Same overwrite hazard as fig1: a titration directory contains one full-depth
+    # isolate plus its subsamples, so this would draw a single-column "profile" over
+    # the real multi-isolate one. The profile is a comparison; one isolate is not one.
+    if len({r["sample_id"] for r in rows}) < 2 and any(
+            v["role"] == "titration" for v in val):
+        print("titration results dir, not an isolate panel; skipping fig2")
         return
 
     samples = sorted({r["sample_id"] for r in rows})

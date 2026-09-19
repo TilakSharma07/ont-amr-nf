@@ -364,6 +364,18 @@ were exactly that until these tests were written:
   builds its own fixtures, which is precisely why none of them could see a stale input.
   `check_published_counts_agree` reads what is actually shipped and recomputes each
   count from the call table.
+- The two documented render commands fought each other. Figure 3 needs the titration
+  table, which the main run does not produce, so this README tells you to run
+  `make_figures.py` twice into the same figure directory. Every figure function ran
+  unconditionally, so the second command re-derived figures 1 and 2 from the titration
+  directory — one full-depth isolate and its subsamples, no controls — and wrote them
+  over the real six-sample versions under the same filenames. Both runs printed
+  success and both self-checks passed, because the figures were geometrically perfect
+  renderings of the wrong data. The committed figures were wrong when I noticed.
+  Figures 1 and 2 now decline a titration directory the way figure 3 already declined
+  a directory with no titration table. The guard is deliberately narrower than "has no
+  controls": `--make_decoy false --caller_control false` is a legitimate run, and there
+  the missing controls must be visible in the figure rather than hidden by its absence.
 
 `test_validation_gate.py` and `test_control_gate.py` extract the Nextflow-interpolated
 Python from their modules and substitute the interpolations, so they exercise the source

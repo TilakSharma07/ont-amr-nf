@@ -319,6 +319,92 @@ def profile_title_matches_data():
     return True
 
 
+def titration_dir_does_not_overwrite_main_figures():
+    """fig1 and fig2 must skip on a titration results dir, not overwrite the real ones.
+
+    The README documents rendering twice into the same figure directory -- once from
+    the main results, once from the titration results, because fig3 needs data the
+    main run does not have. Every figure function used to run unconditionally, so the
+    second command re-wrote fig1 and fig2 from the titration directory: one full-depth
+    isolate and its subsamples, no controls. The result was a figure captioned
+    "1 isolate(s) ... (no controls in this run)" sitting at the filename of the
+    six-sample figure, and the run printed nothing but success. This was shipped.
+
+    The subject of both figures is absent from that directory, so both must decline.
+    """
+    import shutil as _shutil
+    import csv as _csv
+    import os as _os
+
+    label = "fig1/fig2 skip on a titration dir instead of overwriting"
+    scratch = tempfile.mkdtemp(prefix="titdir-")
+    try:
+        res = _os.path.join(scratch, "results_titration")
+        figdir = _os.path.join(scratch, "figs")
+        _os.makedirs(res)
+        _os.makedirs(figdir)
+
+        # a titration directory: one full-depth isolate + subsample rows, no controls
+        subs = ["KP_X_d5_r1", "KP_X_d10_r1", "KP_X_d20_r1", "KP_X_d40_r1"]
+        with open(_os.path.join(res, "validation_summary.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "role", "verdict", "checks_failed",
+                        "amr_calls", "total_elements", "mean_depth", "n50"])
+            w.writerow(["KP_X", "test", "PASS", "", "3", "3", "30.0", "5000000"])
+            for s in subs:
+                w.writerow([s, "titration", "PASS", "", "2", "2", "10.0", "200000"])
+        with open(_os.path.join(res, "amr_calls.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "gene_symbol", "element_type", "element_subtype",
+                        "class_", "pct_identity", "pct_coverage", "method"])
+            for s in ["KP_X"] + subs:
+                for gene in ("blaCTX-M-15", "qnrB1"):
+                    w.writerow([s, gene, "AMR", "AMR", "BETA-LACTAM",
+                                "99.50", "100.00", "BLASTX"])
+        with open(_os.path.join(res, "depth_titration.tsv"), "w", newline="") as fh:
+            w = _csv.writer(fh, delimiter="\t")
+            w.writerow(["sample_id", "target_depth", "replicate", "realised_depth",
+                        "n50", "n_genes_full_depth", "n_genes_recovered",
+                        "recovery_fraction", "genes_missed"])
+            for d, rd, n50 in ((5, 4.8, 50000), (10, 9.7, 200000),
+                               (20, 19.4, 5000000), (40, 38.9, 5100000)):
+                w.writerow(["KP_X", d, 1, rd, n50, 2, 2, "1.0000", ""])
+
+        # sentinel files standing in for real, correct figures already rendered
+        sentinel = b"SENTINEL-NOT-A-PNG"
+        for name in ("fig1_controls_and_quality.png", "fig2_determinant_profile.png"):
+            with open(_os.path.join(figdir, name), "wb") as fh:
+                fh.write(sentinel)
+
+        g = load(results=res, figdir=figdir)
+        g["figure_controls"]()
+        g["figure_profile"]()
+        g["figure_titration"]()
+
+        survived = []
+        for name in ("fig1_controls_and_quality.png", "fig2_determinant_profile.png"):
+            with open(_os.path.join(figdir, name), "rb") as fh:
+                if fh.read() != sentinel:
+                    survived.append(name)
+        fig3 = _os.path.join(figdir, "fig3_depth_titration.png")
+        wrote_fig3 = _os.path.exists(fig3) and _os.path.getsize(fig3) > 20_000
+
+        if survived:
+            print(f"  FAIL  {label}")
+            for s in survived:
+                print(f"        {s} was overwritten from titration data")
+            return False
+        if not wrote_fig3:
+            print(f"  FAIL  {label}")
+            print("        fig3 was not written — the guards are too broad")
+            return False
+        print(f"  PASS  {label}")
+        print("        fig1/fig2 untouched, fig3 rendered from the titration table")
+        return True
+    finally:
+        _shutil.rmtree(scratch, ignore_errors=True)
+
+
 def geometry_check_is_enforced():
     """verify() must raise on a violation, and must ignore undrawn tick labels.
 
@@ -462,6 +548,11 @@ def main(results):
     # 8. verify() must raise, not print. It spent several runs detecting a real fig3
     #    violation while the script wrote the figure and exited 0.
     ok.append(geometry_check_is_enforced())
+
+    # 9. Rendering twice into one figure directory -- which the README documents,
+    #    because fig3 needs the titration data -- must not let the second command
+    #    replace fig1 and fig2 with one-isolate, no-control versions of themselves.
+    ok.append(titration_dir_does_not_overwrite_main_figures())
 
     print()
     if all(ok):
