@@ -1,5 +1,7 @@
 # ont-amr-nf
 
+[![CI](https://github.com/TilakSharma07/ont-amr-nf/actions/workflows/ci.yml/badge.svg)](https://github.com/TilakSharma07/ont-amr-nf/actions/workflows/ci.yml)
+
 **Oxford Nanopore (R10.4.1) bacterial reads → validated antimicrobial-resistance gene calls.**
 
 A Nextflow DSL2 pipeline that takes long-read sequencing data from clinical bacterial
