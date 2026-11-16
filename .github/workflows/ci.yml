@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  stub-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # lower bound is the floor declared in nextflow.config (>=23.10.0)
+        nxf_ver: ["23.10.0", "latest-stable"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Nextflow
+        env:
+          NXF_VER: ${{ matrix.nxf_ver }}
+        run: |
+          curl -s https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      - name: Stub run - validates the whole DAG, no data or tools
+        run: nextflow run . -profile test -stub-run --outdir results_stub
+      - name: The negative control must still be in the DAG
+        run: |
+          test -d results_stub
+          grep -rqi "decoy" results_stub || { echo "::error::decoy absent"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-info-${{ matrix.nxf_ver }}
+          path: results_stub/pipeline_info/
