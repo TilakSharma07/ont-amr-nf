@@ -115,7 +115,7 @@ workflow {
 
     if (asBool(params.help, 'help')) {
         helpMessage()
-        return
+        exit 0
     }
 
     log.info """
