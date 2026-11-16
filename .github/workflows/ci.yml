@@ -35,7 +35,7 @@ jobs:
         run: nextflow -version
 
       - name: Stub run - validates the whole DAG, no data or tools
-        run: nextflow run . -stub-run --outdir results_stub
+        run: nextflow run . -stub-run -c conf/ci_stub.config --outdir results_stub
 
       - name: The negative control must still be in the DAG
         run: |
