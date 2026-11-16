@@ -15,11 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # lower bound is the floor declared in nextflow.config (>=24.04.0)
         nxf_ver: ["24.04.0", "latest-stable"]
     env:
-      # job level, not step level: the launcher reads NXF_VER when `nextflow run`
-      # executes, not when it is installed
       NXF_VER: ${{ matrix.nxf_ver }}
     steps:
       - uses: actions/checkout@v5
@@ -27,19 +24,50 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Install Nextflow
         run: |
           curl -s https://get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
-          nextflow -version
+          {
+            echo "## ${{ matrix.nxf_ver }} — installed version"
+            echo '```'
+            nextflow -version 2>&1 || echo "nextflow -version itself failed"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Stub run - validates the whole DAG, no data or tools
-        run: nextflow run . -stub-run --outdir results_stub
+        run: |
+          set +e
+          nextflow run . -stub-run --outdir results_stub > nxf_out.txt 2>&1
+          code=$?
+          {
+            echo "## ${{ matrix.nxf_ver }} — stub run (exit $code)"
+            echo '```'
+            tail -60 nxf_out.txt
+            echo '```'
+            if [ -f .nextflow.log ]; then
+              echo '<details><summary>.nextflow.log tail</summary>'
+              echo ''
+              echo '```'
+              tail -50 .nextflow.log
+              echo '```'
+              echo '</details>'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+
       - name: The negative control must still be in the DAG
         run: |
           test -d results_stub
           grep -rqi "decoy" results_stub || { echo "::error::decoy absent"; exit 1; }
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pipeline-info-${{ matrix.nxf_ver }}
-          path: results_stub/pipeline_info/
+          name: diagnostics-${{ matrix.nxf_ver }}
+          path: |
+            nxf_out.txt
+            .nextflow.log
+            results_stub/pipeline_info/
+          if-no-files-found: ignore
