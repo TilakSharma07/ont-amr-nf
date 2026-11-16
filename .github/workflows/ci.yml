@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # lower bound is the floor declared in nextflow.config (>=23.10.0)
-        nxf_ver: ["23.10.0", "latest-stable"]
+        # lower bound is the floor declared in nextflow.config (>=24.04.0)
+        nxf_ver: ["24.04.0", "latest-stable"]
     env:
       # job level, not step level: the launcher reads NXF_VER when `nextflow run`
       # executes, not when it is installed
