@@ -15,59 +15,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nxf_ver: ["24.04.0", "latest-stable"]
-    env:
-      NXF_VER: ${{ matrix.nxf_ver }}
+        # Explicit versions, no "latest" token. CI for a reproducibility-focused
+        # pipeline should be deterministic: a red badge must mean this code
+        # changed, not that an upstream release moved under it.
+        #   24.04.0 - the floor declared in nextflow.config
+        #   26.10.6 - a current release the stub run is known to pass on
+        nxf_ver: ["24.04.0", "26.10.6"]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "17"
 
-      - name: Install Nextflow
-        run: |
-          curl -s https://get.nextflow.io | bash
-          sudo mv nextflow /usr/local/bin/
-          {
-            echo "## ${{ matrix.nxf_ver }} — installed version"
-            echo '```'
-            nextflow -version 2>&1 || echo "nextflow -version itself failed"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+      # Replaces `curl -s https://get.nextflow.io | bash`. With NXF_VER set,
+      # that installer builds a legacy URL (www.nextflow.io/releases/v<ver>/...)
+      # which now returns 403, so every run died before Nextflow existed.
+      - uses: nf-core/setup-nextflow@v2
+        with:
+          version: ${{ matrix.nxf_ver }}
+
+      - name: Show the resolved version
+        run: nextflow -version
 
       - name: Stub run - validates the whole DAG, no data or tools
-        run: |
-          set +e
-          nextflow run . -stub-run --outdir results_stub > nxf_out.txt 2>&1
-          code=$?
-          {
-            echo "## ${{ matrix.nxf_ver }} — stub run (exit $code)"
-            echo '```'
-            tail -60 nxf_out.txt
-            echo '```'
-            if [ -f .nextflow.log ]; then
-              echo '<details><summary>.nextflow.log tail</summary>'
-              echo ''
-              echo '```'
-              tail -50 .nextflow.log
-              echo '```'
-              echo '</details>'
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-          exit $code
+        run: nextflow run . -stub-run --outdir results_stub
 
       - name: The negative control must still be in the DAG
         run: |
+          # The repository's central design claim is that the controls travel
+          # the same code path as the isolates. If a refactor drops a control
+          # from the channel, the pipeline still runs green on the isolates and
+          # quietly stops testing itself.
           test -d results_stub
           grep -rqi "decoy" results_stub || { echo "::error::decoy absent"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: diagnostics-${{ matrix.nxf_ver }}
-          path: |
-            nxf_out.txt
-            .nextflow.log
-            results_stub/pipeline_info/
+          name: pipeline-info-${{ matrix.nxf_ver }}
+          path: results_stub/pipeline_info/
           if-no-files-found: ignore
